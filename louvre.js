@@ -175,10 +175,13 @@ export class Louvre extends Louvre_Base {
     }
 
     createRoom(context, program_state, model_transform) {
-        let floor_transform = model_transform.times(Mat4.scale(20,20,20));
+        let floor_transform = model_transform
+			.times(Mat4.scale(20,20,20));
         this.shapes.wall.draw(context, program_state, floor_transform, this.materials.texture_floor);
 
-        let ceiling_transform = floor_transform.times(Mat4.translation(0,1,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+        let ceiling_transform = floor_transform
+			.times(Mat4.translation(0,0,2))
+			.times(Mat4.rotation(Math.PI, 1, 0, 0))
         this.shapes.wall.draw(context, program_state, ceiling_transform, this.materials.texture_ceiling);
 
         let wall1_transform = floor_transform.times(Mat4.translation(2, 0, 1))
@@ -186,13 +189,22 @@ export class Louvre extends Louvre_Base {
             .times(Mat4.translation(0,0,1))
         this.shapes.wall.draw(context, program_state, wall1_transform, this.materials.texture_wall);
 
-        let wall2_transform = floor_transform.times(Mat4.translation(-2,0,1)).times(Mat4.rotation(Math.PI /2, 0, 1, 0)).times(Mat4.translation(0,0,1));
+        let wall2_transform = floor_transform
+			.times(Mat4.translation(-2,0,1))
+			.times(Mat4.rotation(Math.PI /2, 0, 1, 0))
+			.times(Mat4.translation(0,0,1));
         this.shapes.wall.draw(context, program_state, wall2_transform, this.materials.texture_wall);
 
-        let wall3_transform = floor_transform.times(Mat4.translation(0,2,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.translation(0,0,1));
+        let wall3_transform = floor_transform
+			.times(Mat4.translation(0,2,1))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.translation(0,0,1));
         this.shapes.wall.draw(context, program_state, wall3_transform, this.materials.texture_wall);
 
-        let wall4_transform = floor_transform.times(Mat4.translation(0,-2,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.translation(0,0,1));
+        let wall4_transform = floor_transform
+			.times(Mat4.translation(0,0,1))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.translation(0,0,1));
         this.shapes.wall.draw(context, program_state, wall4_transform, this.materials.texture_wall);
 
     }
