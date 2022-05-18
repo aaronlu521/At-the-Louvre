@@ -17,13 +17,16 @@ export class Louvre_Base extends Scene  {
         this.gameDuration = 60;
         this.timeUpdated = false;
 
+        this.torus_speend = -2;
+        this.torus_Y = 0;
         // status
         this.won = false;
 
         this.shapes = {
             cube: new Cube(),
             wall: new Square(),
-            text: new Text_Line(35)
+            text: new Text_Line(35),
+            torus: new defs.Torus(3, 15),
         };
 
         this.pieceFound = {
@@ -86,8 +89,8 @@ export class Louvre_Base extends Scene  {
         this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,3,0),vec3(0,1,0)).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0));
     }
 
-    game_controls() {
-        this.make_control_panel.innerHTML += "Game Control Panel: ";
+    make_control_panel() {
+        this.control_panel.innerHTML += "Game Control Panel: ";
         this.new_line(); this.new_line();
 
         // start
@@ -131,7 +134,7 @@ export class Louvre_Base extends Scene  {
     }
 
     getEyeLocation(program_state) {
-        const V = vec4(0,0,0,1)
+        const V = vec4(0,0,0,1);
         const center = program_state.camera_transform.times(V);
         return center;
     }
@@ -145,7 +148,8 @@ export class Louvre_Base extends Scene  {
         if (!context.scratchpad.controls) {
           this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
           program_state.set_camera(this.initial_camera_location);
-        } else {
+        } 
+        else {
           if (this.attached) {
             if (this.attached().equals(this.initial_camera_location)) {
               program_state.set_camera(this.initial_camera_location);
@@ -195,7 +199,7 @@ export class Louvre extends Louvre_Base {
 
     baseDisplay(context, program_state, model_transform) {
         program_state.lights= [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
-        program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
+        // program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
         let start_message_transform = model_transform.times(Mat4.scale(2.5, 0.5, 0.5));
         this.shapes.cube.draw(context, program_state, start_message_transform, this.materials.start_background);
     }
@@ -285,7 +289,7 @@ export class Louvre extends Louvre_Base {
     showTOD(context, program_state, model_transform) {
 
         let string = ['' + this.currentGameTime.toFixed(2) + 's'];
-        const strings = strings[0].split("\n");
+        const strings = string[0].split("\n");
         let cube_side = Mat4.identity().times(Mat4.scale(0.05, 0.05, 0.0)).times(Mat4.translation(-3, 18, 0));
         for (let line of strings.slice(0, 30)) {
           this.shapes.text.set_string(line, context.context);
