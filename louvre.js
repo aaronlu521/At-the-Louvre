@@ -1,5 +1,6 @@
 import { defs, tiny } from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
+import { Text_Line } from './examples/text-demo.js';
 // Pull these names into this module's scope for convenience:
 const { vec3, vec4, Vector, color, hex_color, Mat4, Light, Shape, Material, Shader, Texture, Scene } = tiny;
 const { Triangle, Square, Tetrahedron, Torus, indmill, Cube, Subdivision_Sphere, Cylindrical_Tube, Textured_Phong, Textured_Phong_text, Phong_Shader } = defs;
@@ -9,13 +10,28 @@ export class Louvre_Base extends Scene  {
         super();
 
         this.startGame = false;
+        this.pauseGame = false;
         this.endGame = false;
         this.allPiecesFound = false;
-        
+        this.currentGameTime = 60;
+        this.gameDuration = 60;
+        this.timeUpdated = false;
+
+        // status
+        this.won = false;
+
         this.shapes = {
             cube: new Cube(),
             wall: new Square(),
-        }
+            text: new Text_Line(35)
+        };
+
+        this.pieceFound = {
+            "Find the following": true,
+            "s": false,
+        };
+
+
 
         this.materials = {
             // wall_material: new Material(new defs.Phong_Shader(),
@@ -50,9 +66,68 @@ export class Louvre_Base extends Scene  {
                 color: color(0, 0.5, 0.5, 1), ambient: 0,
                 diffusivity: 0, specularity: 0, smoothness: 20
             }),
+            time_background: new Material(new Phong_Shader(), {
+                color: color(161, 31, 31, 1), ambient: 0,
+                diffusivity: 0, specularity: 0.3, smoothness: 50
+            }),
+            cube_material: new Material(new defs.Phong_Shader(),
+                { ambient: 0.1, diffusivity: 1, specularity: 0.5, color: hex_color("#0398FC") }),
+
+            text_image: new Material(new Textured_Phong(1), {
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/text.png")
+            }),
+            text_image_screen: new Material(new Textured_Phong(1), {
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/wall.jpg")
+            })
         };
         
         this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,3,0),vec3(0,1,0)).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0));
+    }
+
+    game_controls() {
+        this.make_control_panel.innerHTML += "Game Control Panel: ";
+        this.new_line(); this.new_line();
+
+        // start
+        this.key_triggered_button("Start Game", ["Control", "s"], ()=> {
+            this.startGame = true;
+        });
+        this.new_line(); this.new_line();
+
+        // pause
+        this.key_triggered_button("Pause Game", ["Control", "p"], () => {
+            if (this.startGame && !this.endGame) {
+                this.pauseGame = !this.pauseGame;
+            }
+        });
+        this.new_line(); this.new_line();
+
+        // restart
+        this.key_triggered_button("Restart Game", ["Control", "r"], () => {
+            this.reset();
+        });
+        this.new_line(); this.new_line();
+
+        this.key_triggered_button("Return To Initial Position", ["Control", "k"], () => this.attached = () => this.initial_camera_location);
+    }
+
+    reset() {
+        for (var key in this.pieceFound) {
+            if (this.pieceFound.hasOwnProperty(key)) {
+                if (key != 'Find the following') {
+                    this.pieceFound[key] = false;
+                }
+            }
+        }
+        this.startGame = false;
+        this.pauseGames = false;
+        this.endGame = false;
+        this.allPiecesFound = false;
+        this.won = false;
+        this.timeUpdated = false;
+        this.currentGameTime = 60;
     }
 
     getEyeLocation(program_state) {
@@ -78,6 +153,7 @@ export class Louvre_Base extends Scene  {
           }
         }
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 100);
+        const t = this.t = program_state.animation_time / 1000;
         this.lightToCamera(program_state);
       }
 }
@@ -124,14 +200,171 @@ export class Louvre extends Louvre_Base {
         this.shapes.cube.draw(context, program_state, start_message_transform, this.materials.start_background);
     }
 
+    setStartGame(context, program_state, model_transform) {
+        this.baseDisplay(context, program_state, model_transform);
+
+        let string = ["At the Louvre.\n\n\nPress 'CTRL+S' to \n\nStart the Game"];
+        const strings = string[0].split("\n");
+        let cube_side = Mat4.rotation(0, 1, 0, 0).times(Mat4.rotation(0,0,1,0)).times(Mat4.translation(-1, 0, 1));
+
+        this.textOnDisplay(context, program_state, strings, cube_side);
+    }
+
+    setPauseGame(context, program_state, model_transform) {
+        this.baseDisplay(context, program_state, model_transform);
+        let string = ["\t\t\t\t\tGame Paused\n\n\n\n Press CTRL+P to Resume"];
+        const strings = string[0].split("\n");
+        let cube_side = Mat4.rotation(0,1,0,0).times(Mat4.rotation(0,0,1,0)).times(Mat4.translation(-1.5,0,0.9));
+        this.textOnDisplay(context, program_state, strings, cube_side);
+    }
+
+    setLostScreen (context, program_state, model_transform) {
+        this.baseDisplay(context, program_state, model_transform);
+        let string = ['\t\t\t\tGame Over, You Lost\n\n\nPress CTRL+R To Restart.'];
+        const strings = strings[0].split("\n");
+        let cube_side = Mat4.rotation(0, 1, 0, 0).times(Mat4.rotation(0, 0, 1, 0)).times(Mat4.translation(-1.9, 0, 0.9));
+
+        this.textOnDisplay(context, program_state, multi_line_string, cube_side);
+    }
+
+    setWonScreen (context, program_state, model_transform) {
+        this.baseDisplay(context, program_state, model_transform);
+        var timeTaken = 60 - this.currentGameTime;
+        timeTaken = timeTaken.toFixed(2);
+        let string = ['\t\t\t\tYou Won!\n\n\nYou took ' + timeTaken + 's.'];
+        const strings = strings[0].split("\n");
+        let cube_side = Mat4.rotation(0, 1, 0, 0).times(Mat4.rotation(0, 0, 1, 0)).times(Mat4.translation(-1, 0, 0.9));
+        this.textOnDisplay(context, program_state, multi_line_string, cube_side);
+    }
+
+    getGameState() {
+        // All pieces found
+        if (this.currentGameTime > 0) {
+          for (var key in this.pieceFound) {
+            if (this.pieceFound.hasOwnProperty(key)) {
+              if (this.pieceFound[key] == false) {
+                this.won = false;
+                return;
+              }
+            }
+          }
+          this.won = true;
+          this.endGame = true;
+        }
+        // All pieces found BUT time out
+        else if ((this.allObjectsFound) && (this.currentGameTime <= 0)) {
+          this.won = false;
+        }
+        // time out
+        else if (this.currentGameTime <= 0) {
+          this.endGame = true;
+          this.won = false;
+        }
+    }
+
+    updateTimer(program_state) {
+        if (!this.timeUpdated) {
+          this.currentGameTime = this.gameDuration;
+          this.timeUpdated = true;
+        }
+        else {
+          this.currentGameTime = this.currentGameTime - (program_state.animation_delta_time / 1000);
+        }
+      }
+    
+
+    textOnDisplay(context, program_state, strings, cube_side) {
+        for (let line of strings.slice(0, 30)) {
+            this.shapes.text.set_string(line, context.context);
+            this.shapes.text.draw(context, program_state, cube_side.times(Mat4.scale(.1, .1, .1)), this.materials.text_image);
+
+            cube_side.post_multiply(Mat4. translation(0, -0.09, 0));
+        }
+    }
+    
+    showTOD(context, program_state, model_transform) {
+
+        let string = ['' + this.currentGameTime.toFixed(2) + 's'];
+        const strings = strings[0].split("\n");
+        let cube_side = Mat4.identity().times(Mat4.scale(0.05, 0.05, 0.0)).times(Mat4.translation(-3, 18, 0));
+        for (let line of strings.slice(0, 30)) {
+          this.shapes.text.set_string(line, context.context);
+          if (this.currentGameTime < 11 && Math.floor(this.currentGameTime) % 2 == 0) {
+            let text_color = color(1, 0, 0, 1);
+            this.shapes.text.draw(context, program_state, cube_side, this.materials.text_image_screen.override({ color: text_color }));
+          } else {
+            this.shapes.text.draw(context, program_state, cube_side, this.materials.text_image_screen);
+          }
+        }
+    
+        var z_inc = 0;
+        cube_side = cube_side.times(Mat4.scale(0.5, 0.75, 0));
+        cube_side = cube_side.times(Mat4.translation(-30, 0, 0));
+    
+        for (var key in this.pieceFound) {
+          cube_side = cube_side.times(Mat4.translation(0, -2, 0));
+          let obj_strings = ['' + key];
+          let text_color = color(1, 0, 0, 1);
+    
+          if (key == 'Objects List') {
+            text_color = color(1, 1, 1, 1);
+          }
+          else if (this.pieceFound[key] == true)
+            text_color = color(0, 1, 0, 1);
+          else {
+            text_color = color(1, 1, 1, 1);
+          }
+    
+          const strings2 = obj_strings[0].split("\n");
+    
+          for (let line of strings2.slice(0, 30)) {
+    
+            // Set the string using set_string
+            this.shapes.text.set_string(line, context.context);
+            // Draw but scale down to fit box size
+            this.shapes.text.draw(context, program_state, cube_side, this.materials.text_image_screen.override({ color: text_color }));
+          }
+          z_inc += 0.25;
+        }
+      }
     
     display(context, program_state){
         super.display(context, program_state);
         let model_transform = Mat4.identity();
-        this.baseDisplay(context, program_state, model_transform);
+        if(this.startGame) {
+            if (!this.pauseGame) {
+                if (!this.endGame) {
+                    program_state.set_camera(this.initial_camera_location);
+                    this.getGameState();
+                    this.showTOD(context, program_state, model_transform);
+                    this.updateTimer(program_state);
+                    this.createRoom(context, program_state, model_transform);
+                    this.createPieces(context, program_state, model_transform);
+                    let mouse_X = 0;
+                    let mouse_Y = 0;
 
-        this.createRoom(context, program_state, model_transform);
-        this.createPieces(context, program_state, model_transform);
+                    if(defs.canvas_mouse_pos) {
+                        mouse_X = defs.canvas_mouse_pos[0];
+                        mouse_Y = defs.canvas_mouse_pos[1];
+                    }
+                }
+                else {
+                    if(this.won) {
+                        this.setWonScreen(context, program_state, model_transform);
+                    }
+                    else {
+                        this.setLostScreen(context, program_state, model_transform);
+                    }
+                }
+            }
+            else {
+                this.setPauseGame(context, program_state, model_transform);
+            }
+        }
+        else {
+            this.setStartGame(context, program_state, model_transform);
+        }
+    
     }
     
 }
