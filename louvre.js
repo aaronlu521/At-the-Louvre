@@ -13,6 +13,7 @@ export class Louvre_Base extends Scene  {
         this.allPiecesFound = false;
         
         this.shapes = {
+            cube: new Cube(),
             wall: new Square(),
         }
 
@@ -44,13 +45,19 @@ export class Louvre_Base extends Scene  {
                 ambient: 0.1, diffusivity: 0.5, specularity: 0.1,
                 texture: new Texture("assets/monalisa.jpg")
             }),
+
+            start_background: new Material(new Phong_Shader(), {
+                color: color(0, 0.5, 0.5, 1), ambient: 0,
+                diffusivity: 0, specularity: 0, smoothness: 20
+            }),
         };
         
-        this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,1,0).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0)));
+        this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,3,0),vec3(0,1,0)).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0));
     }
 
     getEyeLocation(program_state) {
-        center = program_state.camera_transform.times(vec4(0, 0, 0, 1));
+        const V = vec4(0,0,0,1)
+        const center = program_state.camera_transform.times(V);
         return center;
     }
     
@@ -60,8 +67,19 @@ export class Louvre_Base extends Scene  {
     }
     
     display(context, program_state) {
+        if (!context.scratchpad.controls) {
+          this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+          program_state.set_camera(this.initial_camera_location);
+        } else {
+          if (this.attached) {
+            if (this.attached().equals(this.initial_camera_location)) {
+              program_state.set_camera(this.initial_camera_location);
+            }
+          }
+        }
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 100);
         this.lightToCamera(program_state);
-    }
+      }
 }
 
 export class Louvre extends Louvre_Base {
@@ -80,7 +98,7 @@ export class Louvre extends Louvre_Base {
         let floor_transform = model_transform.times(Mat4.scale(20,20,20));
         this.shapes.wall.draw(context, program_state, floor_transform, this.materials.texture_floor);
 
-        let ceiling_transform = floor_transform.times(Mat4.translation(0,1,1)).times(Mat4.rotatioon(Math.PI/2, 1, 0, 0))
+        let ceiling_transform = floor_transform.times(Mat4.translation(0,1,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0))
         this.shapes.wall.draw(context, program_state, ceiling_transform, this.materials.texture_ceiling);
 
         let wall1_transform = floor_transform.times(Mat4.translation(2, 0, 1))
@@ -99,14 +117,19 @@ export class Louvre extends Louvre_Base {
 
     }
 
+    baseDisplay(context, program_state, model_transform) {
+        program_state.lights= [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
+        program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
+        let start_message_transform = model_transform.times(Mat4.scale(2.5, 0.5, 0.5));
+        this.shapes.cube.draw(context, program_state, start_message_transform, this.materials.start_background);
+    }
 
     
     display(context, program_state){
         super.display(context, program_state);
         let model_transform = Mat4.identity();
-        // program_state.lights = [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
-        // program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
-        program_state.set_camera(this.initial_camera_location);
+        this.baseDisplay(context, program_state, model_transform);
+
         this.createRoom(context, program_state, model_transform);
         this.createPieces(context, program_state, model_transform);
     }
