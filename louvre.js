@@ -18,9 +18,6 @@ export class Louvre_Base extends Scene  {
         }
 
         this.materials = {
-            // wall_material: new Material(new defs.Phong_Shader(),
-            //   { ambient: 0.1, diffusivity: 0.9, color: hex_color("#ffffff") }),
-
             texture_floor: new Material(new Textured_Phong(), {
                 color: hex_color("#ffffff"),
                 ambient: 0.1, diffusivity: 1, specularity: 0.1,
@@ -28,7 +25,7 @@ export class Louvre_Base extends Scene  {
             }),
 
             texture_ceiling: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
+                color: hex_color("#fff000"),
                 ambient: 0.1, diffusivity: 1, specularity: 0.1,
                 texture: new Texture("assets/ceiling.jpg")
             }),
@@ -56,8 +53,8 @@ export class Louvre_Base extends Scene  {
     }
 
     getEyeLocation(program_state) {
-        const V = vec4(0,0,0,1)
-        const center = program_state.camera_transform.times(V);
+        //const V = vec4(0,0,0,1)
+        const center = program_state.camera_transform.times(vec4(0,0,0,1));
         return center;
     }
     
@@ -87,7 +84,10 @@ export class Louvre extends Louvre_Base {
     createPieces(context, program_state, model_transform) {
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         
-        let painting1_model_transform = model_transform.times(Mat4.translation(19.5, 0, 9)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.scale(0.1, 4, 3));
+        let painting1_model_transform = model_transform
+			.times(Mat4.translation(19.5, 0, 5))
+			.times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+			.times(Mat4.scale(0.1, 4, 3));
 
         // Draw
         this.shapes.cube.draw(context, program_state, painting1_model_transform, this.materials.texture_painting1);
@@ -95,32 +95,42 @@ export class Louvre extends Louvre_Base {
     }
 
     createRoom(context, program_state, model_transform) {
-        let floor_transform = model_transform.times(Mat4.scale(20,20,20));
+        let floor_transform = model_transform
+						.times(Mat4.scale(50,50,50))
+						
         this.shapes.wall.draw(context, program_state, floor_transform, this.materials.texture_floor);
 
         let ceiling_transform = floor_transform.times(Mat4.translation(0,1,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0))
         this.shapes.wall.draw(context, program_state, ceiling_transform, this.materials.texture_ceiling);
-
+		
         let wall1_transform = floor_transform.times(Mat4.translation(2, 0, 1))
             .times(Mat4.rotation(-Math.PI / 2, 0, 1, 0))
             .times(Mat4.translation(0,0,1))
         this.shapes.wall.draw(context, program_state, wall1_transform, this.materials.texture_wall);
-
-        let wall2_transform = floor_transform.times(Mat4.translation(-2,0,1)).times(Mat4.rotation(Math.PI /2, 0, 1, 0)).times(Mat4.translation(0,0,1));
+		
+        let wall2_transform = floor_transform.times(Mat4.translation(-2,0,1))
+			.times(Mat4.rotation(Math.PI /2, 0, 1, 0))
+			.times(Mat4.translation(0,0,1))
         this.shapes.wall.draw(context, program_state, wall2_transform, this.materials.texture_wall);
-
-        let wall3_transform = floor_transform.times(Mat4.translation(0,2,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.translation(0,0,1));
+		
+        let wall3_transform = floor_transform.times(Mat4.translation(0,2,1))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.translation(0,0,1))
         this.shapes.wall.draw(context, program_state, wall3_transform, this.materials.texture_wall);
-
-        let wall4_transform = floor_transform.times(Mat4.translation(0,-2,1)).times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.translation(0,0,1));
+		
+        let wall4_transform = floor_transform
+			.times(Mat4.translation(0,0,1))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.translation(0,0,1))
         this.shapes.wall.draw(context, program_state, wall4_transform, this.materials.texture_wall);
 
     }
-
+	
+	// Sets up the lights and sets the base display
     baseDisplay(context, program_state, model_transform) {
         program_state.lights= [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
-        program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
-        let start_message_transform = model_transform.times(Mat4.scale(2.5, 0.5, 0.5));
+        //program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
+        let start_message_transform = model_transform.times(Mat4.scale(2.5, 1, 0.5));
         this.shapes.cube.draw(context, program_state, start_message_transform, this.materials.start_background);
     }
 
