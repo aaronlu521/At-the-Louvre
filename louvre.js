@@ -199,7 +199,7 @@ export class Louvre extends Louvre_Base {
 
     baseDisplay(context, program_state, model_transform) {
         program_state.lights= [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
-        // program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
+        program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
         let start_message_transform = model_transform.times(Mat4.scale(2.5, 0.5, 0.5));
         this.shapes.cube.draw(context, program_state, start_message_transform, this.materials.start_background);
     }
@@ -300,8 +300,6 @@ export class Louvre extends Louvre_Base {
             this.shapes.text.draw(context, program_state, cube_side, this.materials.text_image_screen);
           }
         }
-    
-        var z_inc = 0;
         cube_side = cube_side.times(Mat4.scale(0.5, 0.75, 0));
         cube_side = cube_side.times(Mat4.translation(-30, 0, 0));
     
@@ -328,7 +326,6 @@ export class Louvre extends Louvre_Base {
             // Draw but scale down to fit box size
             this.shapes.text.draw(context, program_state, cube_side, this.materials.text_image_screen.override({ color: text_color }));
           }
-          z_inc += 0.25;
         }
       }
     
