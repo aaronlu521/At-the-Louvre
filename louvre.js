@@ -125,7 +125,7 @@ export class Louvre_Base extends Scene  {
         this.new_line(); this.new_line();
 
         // restart
-        this.key_triggered_button("Restart Game", ["Alt", "r"], () => {
+        this.key_triggered_button("Restart Game", ["Control", "r"], () => {
             this.reset();
         });
         this.new_line(); this.new_line();
