@@ -1,4 +1,4 @@
-import {defs, tiny} from './example/common.js';
+import {defs, tiny} from './examples/common.js';
 // Import the Louvre museum
 import {louvre} from "./louvre.js";
 
@@ -24,7 +24,7 @@ Object.assign(defs,
 
 // (Can define Main_Scene's class here)
 
-const Main_Scene = Louvre;
+const Main_Scene = louvre;
 const Additional_Scenes = [];
 
 export {Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs}
