@@ -186,19 +186,22 @@ export class Louvre extends Louvre_Base {
 		
         let painting1_model_transform = model_transform
 			.times(Mat4.translation(10, 10, 7))
-			.times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
 			.times(Mat4.scale(0.1, 3, 2));
         this.shapes.cube.draw(context, program_state, painting1_model_transform, this.materials.texture_painting1);
 		
 		let painting2_model_transform = model_transform
 			.times(Mat4.translation(-10, -10, 7))
-			.times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
 			.times(Mat4.scale(0.1, 3, 2));
         this.shapes.cube.draw(context, program_state, painting2_model_transform, this.materials.texture_painting2);
 		
 		let painting3_model_transform = model_transform
 			.times(Mat4.translation(-10, 10, 7))
-			.times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
 			.times(Mat4.scale(0.1, 3, 2));
         this.shapes.cube.draw(context, program_state, painting3_model_transform, this.materials.texture_painting3);
     }
