@@ -87,7 +87,7 @@ export class Louvre extends Louvre_Base {
 		model_transform = Mat4.identity()
         let painting1_model_transform = model_transform
 			.times(Mat4.translation(19.5, 0, 5))
-			.times(Mat4.rotation(Math.PI/2 * t, 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2 * t, t, 0, 0))
 			.times(Mat4.scale(0.1, 4, 3));
 
         // Draw
@@ -141,7 +141,7 @@ export class Louvre extends Louvre_Base {
     display(context, program_state){
         super.display(context, program_state);
         let model_transform = Mat4.identity();
-        this.baseDisplay(context, program_state, model_transform);
+        //this.baseDisplay(context, program_state, model_transform);
 
         this.createRoom(context, program_state, model_transform);
         this.createPieces(context, program_state, model_transform);
