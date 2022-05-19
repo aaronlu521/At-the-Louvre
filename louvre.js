@@ -27,6 +27,7 @@ export class Louvre_Base extends Scene  {
             wall: new Square(),
             text: new Text_Line(35),
             torus: new defs.Torus(3, 15),
+			cylinder: new defs.Capped_Cylinder(8, 8),
         };
 
         this.pieceFound = {
@@ -64,6 +65,18 @@ export class Louvre_Base extends Scene  {
                 ambient: 0.1, diffusivity: 0.5, specularity: 0.1,
                 texture: new Texture("assets/monalisa.jpg")
             }),
+			
+			texture_painting2: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.1, diffusivity: 0.5, specularity: 0.1,
+                texture: new Texture("assets/Sunflowers.jpg")
+            }),
+			
+			texture_painting3: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.1, diffusivity: 0.5, specularity: 0.1,
+                texture: new Texture("assets/StarryNight.jpg")
+            }),
 
             start_background: new Material(new Phong_Shader(), {
                 color: color(0, 0.5, 0.5, 1), ambient: 0,
@@ -83,7 +96,11 @@ export class Louvre_Base extends Scene  {
             text_image_screen: new Material(new Textured_Phong(1), {
                 ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/wall.jpg")
-            })
+            }),
+			
+			cylinder_material: new Material(new defs.Phong_Shader(), {
+				ambient: 0.1, diffusivity: 1, specularity: 0.5, color: hex_color("#43464B")
+			}),
         };
         
         this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,3,0),vec3(0,1,0)).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0));
@@ -109,7 +126,7 @@ export class Louvre_Base extends Scene  {
         this.new_line(); this.new_line();
 
         // restart
-        this.key_triggered_button("Restart Game", ["Alt", "r"], () => {
+        this.key_triggered_button("Restart Game", ["Control", "r"], () => {
             this.reset();
         });
         this.new_line(); this.new_line();
@@ -169,13 +186,88 @@ export class Louvre extends Louvre_Base {
     // Create art pieces inside the louvre
     createPieces(context, program_state, model_transform) {
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        
-        let painting1_model_transform = model_transform.times(Mat4.translation(19.5, 0, 9)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.scale(0.1, 4, 3));
-
-        // Draw
+		
+        let painting1_model_transform = model_transform
+			.times(Mat4.translation(10, 10, 7))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.scale(0.1, 3, 2));
         this.shapes.cube.draw(context, program_state, painting1_model_transform, this.materials.texture_painting1);
-
+		
+		let painting2_model_transform = model_transform
+			.times(Mat4.translation(-10, -10, 7))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.scale(0.1, 3, 2));
+        this.shapes.cube.draw(context, program_state, painting2_model_transform, this.materials.texture_painting2);
+		
+		let painting3_model_transform = model_transform
+			.times(Mat4.translation(-10, 10, 7))
+			.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
+			.times(Mat4.scale(0.1, 3, 2));
+        this.shapes.cube.draw(context, program_state, painting3_model_transform, this.materials.texture_painting3);
     }
+	
+	// Create the pedestals for the paintings to be rotating about
+	createPedestals(context, program_state, model_transform){
+		// Pedestal 1
+		// Transform + Draw for pedestal tip
+		let cylinder_model_transform_tip1 = model_transform
+			.times(Mat4.translation(10, 10, 3))
+			.times(Mat4.scale(1, 1, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_tip1, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal body
+		let cylinder_model_transform_body1 = model_transform
+			.times(Mat4.translation(10, 10, 2))
+			.times(Mat4.scale(2, 2, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_body1, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal end
+		let cylinder_model_transform_end1 = model_transform
+			.times(Mat4.translation(10, 10, 1))
+			.times(Mat4.scale(3, 3, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_end1, this.materials.cylinder_material)
+		
+		// Pedestal 2
+		// Transform + Draw for pedestal tip
+		let cylinder_model_transform_tip2 = model_transform
+			.times(Mat4.translation(-10, -10, 3))
+			.times(Mat4.scale(1, 1, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_tip2, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal body
+		let cylinder_model_transform_body2 = model_transform
+			.times(Mat4.translation(-10, -10, 2))
+			.times(Mat4.scale(2, 2, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_body2, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal end
+		let cylinder_model_transform_end2 = model_transform
+			.times(Mat4.translation(-10, -10, 1))
+			.times(Mat4.scale(3, 3, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_end2, this.materials.cylinder_material)
+		
+		// Pedestal 3
+		// Transform + Draw for pedestal tip
+		let cylinder_model_transform_tip3 = model_transform
+			.times(Mat4.translation(-10, 10, 3))
+			.times(Mat4.scale(1, 1, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_tip3, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal body
+		let cylinder_model_transform_body3 = model_transform
+			.times(Mat4.translation(-10, 10, 2))
+			.times(Mat4.scale(2, 2, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_body3, this.materials.cylinder_material)
+		
+		// Transform + Draw for pedestal end
+		let cylinder_model_transform_end3 = model_transform
+			.times(Mat4.translation(-10, 10, 1))
+			.times(Mat4.scale(3, 3, 1))
+		this.shapes.cylinder.draw(context, program_state, cylinder_model_transform_end3, this.materials.cylinder_material)
+	}
 
     // Create the museum. Walls/floor/ceilings, etc. 
     createRoom(context, program_state, model_transform) {
@@ -210,7 +302,6 @@ export class Louvre extends Louvre_Base {
 			.times(Mat4.rotation(Math.PI/2, 1, 0, 0))
 			.times(Mat4.translation(0,0,1));
         this.shapes.wall.draw(context, program_state, wall4_transform, this.materials.texture_wall);
-
     }
 
     // Initial screen set up
@@ -360,6 +451,7 @@ export class Louvre extends Louvre_Base {
                     this.showTOD(context, program_state, model_transform);
                     this.updateTimer(program_state);
                     this.createRoom(context, program_state, model_transform);
+					this.createPedestals(context, program_state, model_transform);
                     this.createPieces(context, program_state, model_transform);
                     let mouse_X = 0;
                     let mouse_Y = 0;
