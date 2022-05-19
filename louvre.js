@@ -89,6 +89,7 @@ export class Louvre_Base extends Scene  {
         this.initial_camera_location = Mat4.look_at(vec3(-10,3,0),vec3(0,3,0),vec3(0,1,0)).times(Mat4.rotation(- Math.PI / 2, 1, 0, 0));
     }
 
+    // Control maker
     make_control_panel() {
         this.control_panel.innerHTML += "Game Control Panel: ";
         this.new_line(); this.new_line();
@@ -116,6 +117,7 @@ export class Louvre_Base extends Scene  {
         this.key_triggered_button("Return To Initial Position", ["Control", "k"], () => this.attached = () => this.initial_camera_location);
     }
 
+    // Game reset
     reset() {
         for (var key in this.pieceFound) {
             if (this.pieceFound.hasOwnProperty(key)) {
@@ -143,7 +145,8 @@ export class Louvre_Base extends Scene  {
         const light_position = this.getEyeLocation(program_state);
         program_state.lights = [new Light(light_position, color(1,1,1,1), 1000)];
     }
-    
+
+    // Initial camera and light set up
     display(context, program_state) {
         if (!context.scratchpad.controls) {
           this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
@@ -174,6 +177,7 @@ export class Louvre extends Louvre_Base {
 
     }
 
+    // Create the museum. Walls/floor/ceilings, etc. 
     createRoom(context, program_state, model_transform) {
         let floor_transform = model_transform
 			.times(Mat4.scale(20,20,20));
@@ -209,6 +213,7 @@ export class Louvre extends Louvre_Base {
 
     }
 
+    // Initial screen set up
     baseDisplay(context, program_state, model_transform) {
         program_state.lights= [new Light(vec4(0,1,1,0), color(1,1,1,1), 1000000)];
         program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0,0,0], [0,1,0])));
@@ -253,6 +258,7 @@ export class Louvre extends Louvre_Base {
         this.textOnDisplay(context, program_state, multi_line_string, cube_side);
     }
 
+    // Game process set up
     getGameState() {
         // All pieces found
         if (this.currentGameTime > 0) {
@@ -288,7 +294,7 @@ export class Louvre extends Louvre_Base {
         }
       }
     
-
+    // Not propery finished yet
     textOnDisplay(context, program_state, strings, cube_side) {
         for (let line of strings.slice(0, 30)) {
             this.shapes.text.set_string(line, context.context);
@@ -341,6 +347,8 @@ export class Louvre extends Louvre_Base {
         }
       }
     
+
+    // Initialize game and display
     display(context, program_state){
         super.display(context, program_state);
         let model_transform = Mat4.identity();
