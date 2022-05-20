@@ -10,16 +10,16 @@ if sys.version_info < (3, 0):
         pass
 
     Handler.extensions_map = {
-        '.manifest': 'text/cache-manifest',
-        '.html': 'text/html',
-        '.png': 'image/png',
-        '.jpg': 'image/jpg',
-        '.svg': 'image/svg+xml',
-        '.css': 'text/css',
-        '.js':  'application/x-javascript',
-        '': 'application/octet-stream', # Default
+        ".manifest": "text/cache-manifest",
+        ".html": "text/html",
+        ".png": "image/png",
+        ".jpg": "image/jpg",
+        ".svg": "image/svg+xml",
+        ".css": "text/css",
+        ".js": "application/x-javascript",
+        "": "application/octet-stream",  # Default
     }
-    
+
     httpd = SocketServer.TCPServer(("", PORT), Handler)
 
     print("serving at port", PORT)
@@ -33,15 +33,15 @@ else:
 
     Handler = http.server.SimpleHTTPRequestHandler
 
-    Handler.extensions_map={
-        '.manifest': 'text/cache-manifest',
-        '.html': 'text/html',
-        '.png': 'image/png',
-        '.jpg': 'image/jpg',
-        '.svg': 'image/svg+xml',
-        '.css': 'text/css',
-        '.js':  'application/x-javascript',
-        '': 'application/octet-stream', # Default
+    Handler.extensions_map = {
+        ".manifest": "text/cache-manifest",
+        ".html": "text/html",
+        ".png": "image/png",
+        ".jpg": "image/jpg",
+        ".svg": "image/svg+xml",
+        ".css": "text/css",
+        ".js": "application/x-javascript",
+        "": "application/octet-stream",  # Default
     }
 
     httpd = socketserver.TCPServer(("", PORT), Handler)

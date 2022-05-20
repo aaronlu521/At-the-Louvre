@@ -1,19 +1,35 @@
-import {defs, tiny} from './examples/common.js';
-import {Axes_Viewer, Axes_Viewer_Test_Scene} from "./examples/axes-viewer.js"
-import {Collision_Demo, Inertia_Demo} from "./examples/collisions-demo.js"
-import {Many_Lights_Demo} from "./examples/many-lights-demo.js"
-import {Obj_File_Demo} from "./examples/obj-file-demo.js"
-import {Scene_To_Texture_Demo} from "./examples/scene-to-texture-demo.js"
-import {Surfaces_Demo} from "./examples/surfaces-demo.js"
-import {Text_Demo} from "./examples/text-demo.js"
-import {Transforms_Sandbox} from "./examples/transforms-sandbox.js"
+import { defs, tiny } from "./examples/common.js";
+import { Axes_Viewer, Axes_Viewer_Test_Scene } from "./examples/axes-viewer.js";
+import { Collision_Demo, Inertia_Demo } from "./examples/collisions-demo.js";
+import { Many_Lights_Demo } from "./examples/many-lights-demo.js";
+import { Obj_File_Demo } from "./examples/obj-file-demo.js";
+import { Scene_To_Texture_Demo } from "./examples/scene-to-texture-demo.js";
+import { Surfaces_Demo } from "./examples/surfaces-demo.js";
+import { Text_Demo } from "./examples/text-demo.js";
+import { Transforms_Sandbox } from "./examples/transforms-sandbox.js";
+
 // Import the Louvre museum
-import {Louvre} from "./louvre.js";
+import { Louvre } from "./louvre.js";
 
 // Pull these names into this module's scope for convenience:
 const {
-    Vector, Vector3, vec, vec3, vec4, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene,
-    Canvas_Widget, Code_Widget, Text_Widget
+  Vector,
+  Vector3,
+  vec,
+  vec3,
+  vec4,
+  color,
+  Matrix,
+  Mat4,
+  Light,
+  Shape,
+  Material,
+  Shader,
+  Texture,
+  Scene,
+  Canvas_Widget,
+  Code_Widget,
+  Text_Widget,
 } = tiny;
 
 // Now we have loaded everything in the files tiny-graphics.js, tiny-graphics-widgets.js, and common.js.
@@ -24,9 +40,7 @@ const {
 //                      (On the web, a server should instead just pack all these as well
 //                      as common.js into one file for you, such as "dependencies.js")
 
-Object.assign(defs,
-    {Louvre}
-);
+Object.assign(defs, { Louvre });
 
 // ******************** End extra step
 
@@ -35,4 +49,11 @@ Object.assign(defs,
 const Main_Scene = Louvre;
 const Additional_Scenes = [];
 
-export {Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs}
+export {
+  Main_Scene,
+  Additional_Scenes,
+  Canvas_Widget,
+  Code_Widget,
+  Text_Widget,
+  defs,
+};
