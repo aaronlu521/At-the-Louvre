@@ -48,18 +48,36 @@ export class Louvre_Base extends Scene {
     // status
     this.won = false;
 
+    this.obj_centers = new Array(9).fill(0);
+    this.collision_bounce = false;
+
+
     this.shapes = {
       cube: new Cube(),
       wall: new Square(),
       text: new Text_Line(35),
       torus: new defs.Torus(3, 15),
       cylinder: new defs.Capped_Cylinder(8, 8),
+      object1: new defs.Subdivision_Sphere(4),
+      object2: new defs.Subdivision_Sphere(2),
     };
+
+    this.colliders = [
+        { intersect_test: this.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5 },
+        { intersect_test: this.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3 },
+        { intersect_test: this.intersect_cube, points: new defs.Cube(), leeway: .1 }
+      ];
 
     this.pieceFound = {
       "Find the following": true,
-      s: false,
-    };
+      "Globe": false,
+      "Mona Lisa": false,
+    }
+
+    this.pieceIndex = {
+        0: "Globe",
+        4: "Mona Lisa",
+    }
 
     this.materials = {
       texture_floor: new Material(new Textured_Phong(), {
@@ -86,6 +104,11 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/wall.jpg"),
       }),
 
+      texture_sphere: new Material(new Textured_Phong(), {
+          color: hex_color("#ffffff"),
+          ambient: 0.1, diffusivity: 0.9, specularity: 0.1,
+          texture: new Texture("assets/earth.gif")
+      }),
       //painting textures
       texture_painting1: new Material(new Textured_Phong(), {
         color: hex_color("#ffffff"),
@@ -141,11 +164,11 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/text.png"),
       }),
 
-      text_image_screen: new Material(new Textured_Phong(1), {
+      text_image_screen: new Material(new Textured_Phong_text(1), {
         ambient: 1,
         diffusivity: 0,
         specularity: 0,
-        texture: new Texture("assets/wall.jpg"),
+        texture: new Texture("assets/text.png"),
       }),
 
       cylinder_material: new Material(new defs.Phong_Shader(), {
@@ -201,9 +224,9 @@ export class Louvre_Base extends Scene {
 
   // Game reset
   reset() {
-    for (const key in this.pieceFound) {
+    for (var key in this.pieceFound) {
       if (this.pieceFound.hasOwnProperty(key)) {
-        if (key !== "Find the following") {
+        if (key != 'Find the following') {
           this.pieceFound[key] = false;
         }
       }
@@ -293,10 +316,7 @@ export class Louvre extends Louvre_Base {
       painting3_model_transform,
       this.materials.texture_painting3
     );
-  }
 
-  // Create the pedestals for the paintings to be rotating about
-  createPedestals(context, program_state, model_transform) {
     // Pedestal 1
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip1 = model_transform
@@ -365,6 +385,7 @@ export class Louvre extends Louvre_Base {
       this.materials.cylinder_material
     );
 
+  // Create the pedestals for the paintings to be rotating about
     // Pedestal 3
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip3 = model_transform
@@ -398,6 +419,26 @@ export class Louvre extends Louvre_Base {
       cylinder_model_transform_end3,
       this.materials.cylinder_material
     );
+
+    let sphere_model_transform = model_transform.times(Mat4.translation(-16, -10, 1)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.rotation(Math.PI / 2 * t, 0, 1, 0));
+    this.shapes.object1.draw(context, program_state, sphere_model_transform, this.materials.texture_sphere);
+    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 3];
+    this.obj_centers[1] = [...cylinder_model_transform_end1.transposed()[3], 2, 2];
+    this.obj_centers[2] = [...cylinder_model_transform_end2.transposed()[3], 2, 2];
+    this.obj_centers[3] = [...cylinder_model_transform_end3.transposed()[3], 2, 2];
+    this.obj_centers[4] = [...painting1_model_transform.transposed()[3], 1, 2.5];
+
+    this.distances = this.obj_centers.map((pos) => {
+        const camera_position = this.getEyeLocation(program_state);
+        return [
+            Math.abs(camera_position[1] - pos[1]),
+            Math.abs(camera_position[0] - pos[0]),
+            pos[4],
+            pos[5]
+        ];
+    });
+    this.collision_detection(this.distances, 1);
+
   }
 
   // Create the museum. Walls/floor/ceilings, etc.
@@ -465,6 +506,50 @@ export class Louvre extends Louvre_Base {
     );
   }
 
+  collision_detection(distances) {
+    var obj = null;
+    var counter = 0;
+
+    const collide = distances.some((dist) => {
+    if (dist[0] < dist[2] && dist[1] < dist[3]) {
+        obj = counter;
+    }
+    counter += 1;
+    return dist[0] < dist[2] && dist[1] < dist[3]
+    });
+
+    if (collide) {
+
+    // Find object we collided with and set to true
+    if (obj in this.pieceIndex) {
+        if (!this.pieceFound[this.pieceIndex[obj]]) {
+        const pieceName = this.pieceIndex[obj];
+        console.log(pieceName);
+        this.pieceFound[pieceName] = true;
+        }
+    }
+
+    if (defs.left) {
+        defs.thrust[0] = -0.3;
+    } else if (defs.right) {
+        defs.thrust[0] = 0.3;
+    }
+
+    if (defs.forward) {
+        defs.thrust[2] = -0.3;
+    } else if (defs.backward) {
+        defs.thrust[2] = 0.3;
+    }
+    this.collision_bounce = true;
+    }
+
+    else if (this.collision_bounce) {
+      defs.thrust[0] = 0;
+      defs.thrust[2] = 0;
+      this.collision_bounce = false;
+    }
+  }
+
   // Initial screen set up
   baseDisplay(context, program_state, model_transform) {
     program_state.lights = [
@@ -509,12 +594,12 @@ export class Louvre extends Louvre_Base {
   setLostScreen(context, program_state, model_transform) {
     this.baseDisplay(context, program_state, model_transform);
     let string = ["\t\t\t\tGame Over, You Lost\n\n\nPress CTRL+R To Restart."];
-    const strings = strings[0].split("\n");
+    const strings = string[0].split("\n");
     let cube_side = Mat4.rotation(0, 1, 0, 0)
       .times(Mat4.rotation(0, 0, 1, 0))
       .times(Mat4.translation(-1.9, 0, 0.9));
 
-    this.textOnDisplay(context, program_state, multi_line_string, cube_side);
+    this.textOnDisplay(context, program_state, strings, cube_side);
   }
 
   setWonScreen(context, program_state, model_transform) {
@@ -522,11 +607,11 @@ export class Louvre extends Louvre_Base {
     var timeTaken = 60 - this.currentGameTime;
     timeTaken = timeTaken.toFixed(2);
     let string = ["\t\t\t\tYou Won!\n\n\nYou took " + timeTaken + "s."];
-    const strings = strings[0].split("\n");
+    const strings = string[0].split("\n");
     let cube_side = Mat4.rotation(0, 1, 0, 0)
       .times(Mat4.rotation(0, 0, 1, 0))
       .times(Mat4.translation(-1, 0, 0.9));
-    this.textOnDisplay(context, program_state, multi_line_string, cube_side);
+    this.textOnDisplay(context, program_state, strings, cube_side);
   }
 
   // Game process set up
@@ -581,7 +666,7 @@ export class Louvre extends Louvre_Base {
   }
 
   showTOD(context, program_state, model_transform) {
-    let string = ["" + this.currentGameTime.toFixed(2) + "s"];
+    let string = ['' + this.currentGameTime.toFixed(2) + "s"];
     const strings = string[0].split("\n");
     let cube_side = Mat4.identity()
       .times(Mat4.scale(0.05, 0.05, 0.0))
@@ -613,12 +698,12 @@ export class Louvre extends Louvre_Base {
 
     for (const key in this.pieceFound) {
       cube_side = cube_side.times(Mat4.translation(0, -2, 0));
-      let obj_strings = ["" + key];
+      let obj_strings = ['' + key];
       let text_color = color(1, 0, 0, 1);
 
-      if (key === "Objects List") {
+      if (key == 'Find the following') {
         text_color = color(1, 1, 1, 1);
-      } else if (this.pieceFound[key] === true) text_color = color(0, 1, 0, 1);
+      } else if (this.pieceFound[key] == true) text_color = color(0, 1, 0, 1);
       else {
         text_color = color(1, 1, 1, 1);
       }
@@ -626,9 +711,8 @@ export class Louvre extends Louvre_Base {
       const strings2 = obj_strings[0].split("\n");
 
       for (let line of strings2.slice(0, 30)) {
-        // Set the string using set_string
         this.shapes.text.set_string(line, context.context);
-        // Draw but scale down to fit box size
+        
         this.shapes.text.draw(
           context,
           program_state,
@@ -652,7 +736,6 @@ export class Louvre extends Louvre_Base {
           this.showTOD(context, program_state, model_transform);
           this.updateTimer(program_state);
           this.createRoom(context, program_state, model_transform);
-          this.createPedestals(context, program_state, model_transform);
           this.createPieces(context, program_state, model_transform);
 
           let mouse_X = 0;

@@ -40,7 +40,7 @@ const {
 //                      (On the web, a server should instead just pack all these as well
 //                      as common.js into one file for you, such as "dependencies.js")
 
-Object.assign(defs, { Louvre });
+Object.assign(defs, { Louvre }, { Obj_File_Demo} , {Collision_Demo}, {Inertia_Demo});
 
 // ******************** End extra step
 
