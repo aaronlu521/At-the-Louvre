@@ -590,7 +590,8 @@ const Phong_Shader = defs.Phong_Shader =
                 uniform vec4 light_positions_or_vectors[N_LIGHTS], light_colors[N_LIGHTS];
                 uniform float light_attenuation_factors[N_LIGHTS];
                 uniform vec4 shape_color;
-                uniform vec3 squared_scale, camera_center;
+                uniform vec3 squared_scale, camera_center, camera_direction;
+                float u_limit = 0.95;
         
                 // Specifier "varying" means a variable's final value will be passed from the vertex shader
                 // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
@@ -611,7 +612,9 @@ const Phong_Shader = defs.Phong_Shader =
                         vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
                                                        light_positions_or_vectors[i].w * vertex_worldspace;                                             
                         float distance_to_light = length( surface_to_light_vector );
-        
+                        vec3 surfaceToLightDirection = normalize(surface_to_light_vector);
+                        vec3 u_lightDirection = normalize(camera_direction);
+                        float dotFromDirection = dot(surfaceToLightDirection, -u_lightDirection);
                         vec3 L = normalize( surface_to_light_vector );
                         vec3 H = normalize( L + E );
                         // Compute the diffuse and specular components from the Phong
@@ -622,6 +625,9 @@ const Phong_Shader = defs.Phong_Shader =
                         
                         vec3 light_contribution = shape_color.xyz * light_colors[i].xyz * diffusivity * diffuse
                                                                   + light_colors[i].xyz * specularity * specular;
+                        if (dotFromDirection < u_limit) {
+                            attenuation = 0.0;
+                        }
                         result += attenuation * light_contribution;
                       }
                     return result;
@@ -780,6 +786,29 @@ const Textured_Phong = defs.Textured_Phong =
         }
     }
 
+const Textured_Phong_text = defs.Textured_Phong_text =
+    class Textured_Phong_text extends Textured_Phong {
+        vertex_glsl_code() {
+            return this.shared_glsl_code() + `
+                varying vec2 f_tex_coord;
+                attribute vec3 position, normal;                            
+                // Position is expressed in object coordinates.
+                attribute vec2 texture_coord;
+                
+                uniform mat4 model_transform;
+                uniform mat4 projection_camera_model_transform;
+        
+                void main(){                                                                   
+                    // The vertex's final resting place (in NDCS):
+                    gl_Position =  model_transform * vec4( position, 1.0 );
+                    // The final normal vector in screen space.
+                    N = normalize( mat3( model_transform ) * normal / squared_scale);
+                    vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+                    // Turn the per-vertex texture coordinate into an interpolated variable.
+                    f_tex_coord = texture_coord;
+                  } `;
+        }
+    }
 
 const Fake_Bump_Map = defs.Fake_Bump_Map =
     class Fake_Bump_Map extends Textured_Phong {
@@ -823,8 +852,17 @@ const Movement_Controls = defs.Movement_Controls =
             };
             Object.assign(this, data_members);
 
+            this.bounds = 16;
+            this.objbounds = {
+                obj1: {x1: 0, x2: -3, y1: 0, y2: -3}, //globe
+                
+            }
             this.mouse_enabled_canvases = new Set();
             this.will_take_over_graphics_state = true;
+            this.left = false;
+            this.right = false;
+            this.forward = false;
+            this.backward = false;
         }
 
         set_recipient(matrix_closure, inverse_closure) {
@@ -994,6 +1032,26 @@ const Movement_Controls = defs.Movement_Controls =
                 this.add_mouse_controls(context.canvas);
                 this.mouse_enabled_canvases.add(context.canvas)
             }
+
+            if (this.pos[0] > this.bounds && this.left)
+                this.thrust[0] = -0.1;
+            else if(this.pos[0] < -this.bounds && this.right) 
+                this.thrust[0] = 0.1;
+
+            if(this.pos[2] > this.bounds && this.forward)
+                this.thrust[2] = -0.1;
+            else if(this.pos[2] < -this.bounds && this.backward)
+                this.thrust[2] = 0.1;
+
+            // Variables required for darkhouse.js
+            defs.forward = this.forward;
+            defs.backward = this.backward;
+            defs.left = this.left;
+            defs.right = this.right;
+
+            defs.canvas_mouse_pos = this.mouse.from_center;
+            defs.pos = this.pos;
+            defs.thrust = this.thrust;
             // Move in first-person.  Scale the normal camera aiming speed by dt for smoothness:
             this.first_person_flyaround(dt * r, dt * m);
             // Also apply third-person "arcball" camera mode if a mouse drag is occurring:
