@@ -241,8 +241,8 @@ export class Louvre_Base extends Scene {
   }
 
   getEyeLocation(program_state) {
-    const V = vec4(0, 0, 0, 1);
-    return program_state.camera_transform.times(V);
+    const Eye = vec4(0, 0, 0, 1);
+    return program_state.camera_transform.times(Eye);
   }
 
   lightToCamera(program_state) {
