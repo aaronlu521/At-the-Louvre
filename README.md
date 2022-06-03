@@ -40,3 +40,9 @@ Ctrl + o    Return To Initial Position (Bugged)
 ### Collision detection with a little physics
 The player is restricted in their movement within the margin (four walls). Whenever the user attempts to move past the margin, there's a small "thrust" (push-back) that is applied in the opposite direction. We accomplished this by constructing a position array that keeps track of object's position in the room. We calculate the distances of our camera to each object's position using the position array.
 Key part of our game is to find objects inside the museum, thus our collision also serves as the object found detection system. We set the objects to be "found" when the player goes near the object.
+
+## Contributors
+- Aaron Lu (@aaronlu521)
+- Angad Misra (@ThirdEyeSqueegee)
+- Haewon Cho (@HaewonCho)
+- Richard Lee (@jinooung)
