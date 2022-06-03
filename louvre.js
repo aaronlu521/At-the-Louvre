@@ -33,6 +33,7 @@ const {
   Cube,
   Subdivision_Sphere,
   Cylindrical_Tube,
+  Capped_Cylinder,
   Textured_Phong,
   Textured_Phong_text,
   Phong_Shader,
@@ -65,27 +66,27 @@ export class Louvre_Base extends Scene {
       cone: new Closed_Cone(8, 8),
       wall: new Square(),
       text: new Text_Line(35),
-      torus: new defs.Torus(3, 15),
-      cylinder: new defs.Capped_Cylinder(8, 8),
-      sphere: new defs.Subdivision_Sphere(4),
-      object1: new defs.Subdivision_Sphere(4),
-      object2: new defs.Subdivision_Sphere(2),
+      torus: new Torus(3, 15),
+      cylinder: new Capped_Cylinder(8, 8),
+      sphere: new Subdivision_Sphere(4),
+      object1: new Subdivision_Sphere(4),
+      object2: new Subdivision_Sphere(2),
     };
 
     this.colliders = [
       {
         intersect_test: this.intersect_sphere,
-        points: new defs.Subdivision_Sphere(1),
+        points: new Subdivision_Sphere(1),
         leeway: 0.5,
       },
       {
         intersect_test: this.intersect_sphere,
-        points: new defs.Subdivision_Sphere(2),
+        points: new Subdivision_Sphere(2),
         leeway: 0.3,
       },
       {
         intersect_test: this.intersect_cube,
-        points: new defs.Cube(),
+        points: new Cube(),
         leeway: 0.1,
       },
     ];
@@ -125,13 +126,12 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/ceiling.jpg"),
       }),
 
-      texture_wall: new Material(new Shadow_Textured_Phong_Shader(1), {
+      texture_wall: new Material(new Textured_Phong(), {
         color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
-        color_texture: new Texture("assets/wall.jpg"),
-        light_depth_texture: null,
+        texture: new Texture("assets/wall.jpg"),
       }),
 
       texture_sphere: new Material(new Textured_Phong(), {
@@ -230,14 +230,14 @@ export class Louvre_Base extends Scene {
         smoothness: 50,
       }),
 
-      cube_material: new Material(new defs.Phong_Shader(), {
+      cube_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
         color: hex_color("#0398FC"),
       }),
 
-      cone_material: new Material(new defs.Phong_Shader(), {
+      cone_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
@@ -258,14 +258,14 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/text.png"),
       }),
 
-      cylinder_material: new Material(new defs.Phong_Shader(), {
+      cylinder_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
         color: hex_color("#43464B"),
       }),
 
-      sphere_material: new Material(new defs.Phong_Shader(), {
+      sphere_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
@@ -334,7 +334,6 @@ export class Louvre_Base extends Scene {
     // Bind it to TinyGraphics
     this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
     this.materials.texture_floor.light_depth_texture = this.light_depth_texture;
-    // TODO: Add remaining textures
 
     this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
     gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
@@ -429,6 +428,18 @@ export class Louvre_Base extends Scene {
 
   // Initial camera and light set up
   display(context, program_state) {
+    const gl = context.context;
+
+    if (!this.init_ok) {
+      const ext = gl.getExtension("WEBGL_depth_texture");
+      if (!ext) {
+        return alert("need WEBGL_depth_texture"); // eslint-disable-line
+      }
+      this.texture_buffer_init(gl);
+
+      this.init_ok = true;
+    }
+
     if (!context.scratchpad.controls) {
       this.children.push(
         (context.scratchpad.controls = new defs.Movement_Controls())
@@ -749,13 +760,12 @@ export class Louvre extends Louvre_Base {
     draw_shadow = false
   ) {
     program_state.draw_shadow = draw_shadow;
-
     let floor_transform = model_transform.times(Mat4.scale(40, 40, 20));
     this.shapes.wall.draw(
       context,
       program_state,
       floor_transform,
-      shadow_pass ? this.materials.texture_floor : this.pure
+      this.materials.texture_floor
     );
 
     let ceiling_transform = floor_transform
@@ -765,7 +775,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       ceiling_transform,
-      shadow_pass ? this.materials.texture_ceiling : this.pure
+      this.materials.texture_ceiling
     );
 
     let wall1_transform = floor_transform
@@ -776,7 +786,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall1_transform,
-      shadow_pass ? this.materials.texture_wall : this.pure
+      this.materials.texture_wall
     );
 
     let wall2_transform = floor_transform
@@ -787,7 +797,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall2_transform,
-      shadow_pass ? this.materials.texture_wall : this.pure
+      this.materials.texture_wall
     );
 
     let wall3_transform = floor_transform
@@ -798,7 +808,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall3_transform,
-      shadow_pass ? this.materials.texture_wall : this.pure
+      this.materials.texture_wall
     );
 
     let wall4_transform = floor_transform
@@ -809,7 +819,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall4_transform,
-      shadow_pass ? this.materials.texture_wall : this.pure
+      this.materials.texture_wall
     );
   }
 
@@ -1030,25 +1040,35 @@ export class Louvre extends Louvre_Base {
   // Initialize game and display
   display(context, program_state) {
     super.display(context, program_state);
-
-    const gl = context.context;
-
-    if (!this.init_ok) {
-      const ext = gl.getExtension("WEBGL_depth_texture");
-      if (!ext) {
-        return alert("need WEBGL_depth_texture"); // eslint-disable-line
-      }
-      this.texture_buffer_init(gl);
-
-      this.init_ok = true;
-    }
-
     let model_transform = Mat4.identity();
-
+    const gl = context.context;
     if (this.startGame) {
       if (!this.pauseGame) {
         if (!this.endGame) {
           program_state.set_camera(this.initial_camera_location);
+
+          this.light_view_target = vec4(0, 0, 0, 1);
+          this.light_field_of_view = (130 * Math.PI) / 180; // 130 degree
+          this.light_position = this.getEyeLocation(program_state);
+          const light_view_mat = Mat4.look_at(
+            vec3(
+              this.light_position[0],
+              this.light_position[1],
+              this.light_position[2]
+            ),
+            vec3(
+              this.light_view_target[0],
+              this.light_view_target[1],
+              this.light_view_target[2]
+            ),
+            vec3(0, 1, 0) // assume the light to target will have a up dir of +y, maybe need to change according to your case
+          );
+          const light_proj_mat = Mat4.perspective(
+            this.light_field_of_view,
+            1,
+            0.5,
+            500
+          );
 
           gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
           gl.viewport(
@@ -1058,22 +1078,43 @@ export class Louvre extends Louvre_Base {
             this.lightDepthTextureSize
           );
           gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-          program_state.light_view_mat = this.getEyeLocation(program_state);
-          program_state.light_proj_mat = program_state.projection_transform;
-          program_state.light_tex_mat = program_state.projection_transform;
-          program_state.view_mat = this.getEyeLocation(program_state);
+          // Prepare uniforms
+          program_state.light_view_mat = light_view_mat;
+          program_state.light_proj_mat = light_proj_mat;
+          program_state.light_tex_mat = light_proj_mat;
+          program_state.view_mat = light_view_mat;
+          program_state.projection_transform = light_proj_mat;
+          this.createRoom(
+            context,
+            program_state,
+            model_transform,
+            false,
+            false
+          );
 
           gl.bindFramebuffer(gl.FRAMEBUFFER, null);
           gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
           program_state.view_mat = program_state.camera_inverse;
+          program_state.projection_transform = Mat4.perspective(
+            Math.PI / 4,
+            context.width / context.height,
+            0.5,
+            500
+          );
 
           this.getGameState();
           this.showTOD(context, program_state, model_transform);
           this.updateTimer(program_state);
           this.createRoom(context, program_state, model_transform, true, true);
           this.createPieces(context, program_state, model_transform);
+
+          let mouse_X = 0;
+          let mouse_Y = 0;
+
+          if (defs.canvas_mouse_pos) {
+            mouse_X = defs.canvas_mouse_pos[0];
+            mouse_Y = defs.canvas_mouse_pos[1];
+          }
         } else {
           if (this.won) {
             this.setWonScreen(context, program_state, model_transform);
