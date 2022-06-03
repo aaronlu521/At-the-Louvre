@@ -97,7 +97,7 @@ export class Louvre_Base extends Scene {
 
     this.materials = {
       texture_floor: new Material(new Textured_Phong(), {
-        color: hex_color("#000000"),
+        color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
@@ -113,7 +113,7 @@ export class Louvre_Base extends Scene {
       }),
 
       texture_wall: new Material(new Textured_Phong(), {
-        color: hex_color("#000000"),
+        color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
@@ -301,7 +301,6 @@ export class Louvre_Base extends Scene {
     // restart
     this.key_triggered_button("Restart Game", ["Control", "r"], () => {
       this.reset();
-      program_state.set_camera(this.initial_camera_location);
     });
     this.new_line();
     this.new_line();
@@ -309,10 +308,7 @@ export class Louvre_Base extends Scene {
     this.key_triggered_button(
       "Return To Initial Position",
       ["Control", "o"],
-      () => {
-        program_state.set_camera(this.initial_camera_location);
-      }
-    );
+	  () => this.attached = () => this.initial_camera_location);
   }
 
   // Game reset
