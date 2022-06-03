@@ -69,6 +69,7 @@ export class Louvre_Base extends Scene {
       sphere: new Subdivision_Sphere(4),
       object1: new Subdivision_Sphere(4),
       object2: new Subdivision_Sphere(2),
+      coin: new defs.Capped_Cylinder(12, 12),
     };
 
     this.colliders = [
@@ -91,10 +92,11 @@ export class Louvre_Base extends Scene {
 
     this.pieceFound = {
       "Find the following": true,
-      Globe: false,
+      "Globe": false,
       "Mona Lisa": false,
-      Almond: false,
+      "Almond": false,
       "Starry Night": false,
+      "A coin": false,
     };
 
     this.pieceIndex = {
@@ -102,6 +104,7 @@ export class Louvre_Base extends Scene {
       4: "Mona Lisa",
       5: "Almond",
       6: "Starry Night",
+      7: "A coin"
     };
 
     this.pure = new Material(new Color_Phong_Shader(), {});
@@ -233,6 +236,13 @@ export class Louvre_Base extends Scene {
         diffusivity: 1,
         specularity: 0.5,
         color: hex_color("#0398FC"),
+      }),
+
+      coin_material: new Material(new Phong_Shader(), {
+        ambient: 0.2,
+        diffusivity: 1,
+        specularity: 0.5,
+        color: hex_color("#ffd700"),
       }),
 
       cone_material: new Material(new defs.Phong_Shader(), {
@@ -676,6 +686,10 @@ export class Louvre extends Louvre_Base {
       this.materials.cylinder_material
     );
 
+    let theta = Math.PI / 2 * t;
+    let coin_model_transform = model_transform.times(Mat4.translation(-15, 21, 0.5)).times(Mat4.scale(0.2,0.2,0.2)).times(Mat4.rotation(Math.PI/2, 0,1,0)).times(Mat4.rotation(theta,1,0,0));
+    this.shapes.coin.draw(context, program_state, coin_model_transform, this.materials.coin_material);
+
     let cone_model_transform = model_transform
       .times(Mat4.translation(18, 14, 2))
       .times(Mat4.scale(2, 2, 2));
@@ -739,6 +753,7 @@ export class Louvre extends Louvre_Base {
       30,
     ];
     this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 4, 10];
+    this.obj_centers[7] = [...coin_model_transform.transposed()[3], 1, 1.5];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
       return [
