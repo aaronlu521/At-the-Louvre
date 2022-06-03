@@ -19,6 +19,7 @@ const {
 
 const {
   Triangle,
+  Closed_Cone,
   Square,
   Tetrahedron,
   Torus,
@@ -55,10 +56,12 @@ export class Louvre_Base extends Scene {
 
     this.shapes = {
       cube: new Cube(),
+	  cone: new Closed_Cone(8, 8),
       wall: new Square(),
       text: new Text_Line(35),
       torus: new defs.Torus(3, 15),
       cylinder: new defs.Capped_Cylinder(8, 8),
+	  sphere: new defs.Subdivision_Sphere(4),
       object1: new defs.Subdivision_Sphere(4),
       object2: new defs.Subdivision_Sphere(2),
     };
@@ -149,6 +152,54 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/StarryNight.jpg"),
       }),
 
+	  texture_painting4: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/June.jpg"),
+      }),	  
+
+      texture_painting5: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Almond.jpg"),
+      }),
+
+      texture_painting6: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Earring.jpg"),
+      }),
+
+      texture_painting7: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Pair.jpg"),
+      }),
+	  
+      texture_painting8: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Cafe.jpg"),
+      }),	 
+
+      texture_painting9: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/venus.jpg"),
+      }),
+
       start_background: new Material(new Phong_Shader(), {
         color: color(0, 0.5, 0.5, 1),
         ambient: 0,
@@ -171,6 +222,13 @@ export class Louvre_Base extends Scene {
         specularity: 0.5,
         color: hex_color("#0398FC"),
       }),
+	  
+	  cone_material: new Material(new defs.Phong_Shader(), {
+        ambient: 0.1,
+        diffusivity: 1,
+        specularity: 0.5,
+        color: hex_color("#FFFF00"),
+      }),
 
       text_image: new Material(new Textured_Phong(1), {
         ambient: 1,
@@ -191,6 +249,13 @@ export class Louvre_Base extends Scene {
         diffusivity: 1,
         specularity: 0.5,
         color: hex_color("#43464B"),
+      }),
+	  
+	  sphere_material: new Material(new defs.Phong_Shader(), {
+        ambient: 0.1,
+        diffusivity: 1,
+        specularity: 0.5,
+        color: hex_color("#ff0000"),
       }),
     };
 
@@ -307,7 +372,7 @@ export class Louvre extends Louvre_Base {
     let dt = program_state.animation_delta_time / 1000;
 
     let painting1_model_transform = model_transform
-      .times(Mat4.translation(10, 10, 7))
+      .times(Mat4.translation(20, 20, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -319,7 +384,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let painting2_model_transform = model_transform
-      .times(Mat4.translation(-10, -10, 7))
+      .times(Mat4.translation(-15, -20, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -331,7 +396,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let painting3_model_transform = model_transform
-      .times(Mat4.translation(-10, 10, 7))
+      .times(Mat4.translation(-25, 25, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -341,11 +406,86 @@ export class Louvre extends Louvre_Base {
       painting3_model_transform,
       this.materials.texture_painting3
     );
+	
+    let painting4_model_transform = model_transform
+      .times(Mat4.translation(-40, 20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting4_model_transform,
+      this.materials.texture_painting4
+    );
+
+    let painting5_model_transform = model_transform
+      .times(Mat4.translation(-40, -20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting5_model_transform,
+      this.materials.texture_painting5
+    );
+
+    let painting6_model_transform = model_transform
+      .times(Mat4.translation(40, 20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting6_model_transform,
+      this.materials.texture_painting6
+    );
+
+    let painting7_model_transform = model_transform
+      .times(Mat4.translation(40, -20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting7_model_transform,
+      this.materials.texture_painting7
+    );	
+	
+    let painting8_model_transform = model_transform
+      .times(Mat4.translation(1, 40, 15))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+	  .times(Mat4.rotation(Math.PI / 2, Math.PI / 2, 0, 0))
+      .times(Mat4.rotation(0, Math.PI / 2, 1, 0))
+      .times(Mat4.scale(15, 10, 0.1));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting8_model_transform,
+      this.materials.texture_painting8
+    );	
+	
+	let painting9_model_transform = model_transform
+      .times(Mat4.translation(1, -40, 15))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+	  .times(Mat4.rotation(Math.PI / 2, Math.PI / 2, 0, 0))
+      .times(Mat4.rotation(0, Math.PI / 2, 1, 0))
+      .times(Mat4.scale(15, 10, 0.1));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting9_model_transform,
+      this.materials.texture_painting9
+    );	
+
 
     // Pedestal 1
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip1 = model_transform
-      .times(Mat4.translation(10, 10, 3))
+      .times(Mat4.translation(20, 20, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -356,7 +496,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body1 = model_transform
-      .times(Mat4.translation(10, 10, 2))
+      .times(Mat4.translation(20, 20, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -367,7 +507,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end1 = model_transform
-      .times(Mat4.translation(10, 10, 1))
+      .times(Mat4.translation(20, 20, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -379,7 +519,7 @@ export class Louvre extends Louvre_Base {
     // Pedestal 2
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip2 = model_transform
-      .times(Mat4.translation(-10, -10, 3))
+      .times(Mat4.translation(-15, -20, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -390,7 +530,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body2 = model_transform
-      .times(Mat4.translation(-10, -10, 2))
+      .times(Mat4.translation(-15, -20, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -401,7 +541,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end2 = model_transform
-      .times(Mat4.translation(-10, -10, 1))
+      .times(Mat4.translation(-15, -20, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -410,11 +550,11 @@ export class Louvre extends Louvre_Base {
       this.materials.cylinder_material
     );
 
-    // Create the pedestals for the paintings to be rotating about
+  // Create the pedestals for the paintings to be rotating about
     // Pedestal 3
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip3 = model_transform
-      .times(Mat4.translation(-10, 10, 3))
+      .times(Mat4.translation(-25, 25, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -425,7 +565,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body3 = model_transform
-      .times(Mat4.translation(-10, 10, 2))
+      .times(Mat4.translation(-25, 25, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -436,7 +576,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end3 = model_transform
-      .times(Mat4.translation(-10, 10, 1))
+      .times(Mat4.translation(-25, 25, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -444,6 +584,16 @@ export class Louvre extends Louvre_Base {
       cylinder_model_transform_end3,
       this.materials.cylinder_material
     );
+	
+	let cone_model_transform = model_transform.times(Mat4.translation(18, 14, 2)).times(Mat4.scale(2,2,2));
+	this.shapes.cone.draw(context, program_state, cone_model_transform, this.materials.cone_material);
+	
+	let cube_model_transform = model_transform.times(Mat4.translation(22.5, 12, 2.5)).times(Mat4.scale(2.5,2.5,2.5));
+	this.shapes.cube.draw(context, program_state, cube_model_transform, this.materials.cube_material);
+	
+	let sphere_toy_model_transform = model_transform.times(Mat4.translation(18, 11, 1)).times(Mat4.scale(1,1,1));
+	this.shapes.sphere.draw(context, program_state, sphere_toy_model_transform, this.materials.sphere_material);
+	
 
     let sphere_model_transform = model_transform
       .times(Mat4.translation(-16, -10, 1))
