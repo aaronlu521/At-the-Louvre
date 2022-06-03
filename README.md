@@ -38,8 +38,11 @@ Ctrl + o    Return To Initial Position (Bugged)
 ## Advanced Features
 ```
 ### Collision detection with a little physics
-The player is restricted in their movement within the margin (four walls). Whenever the user attempts to move past the margin, there's a small "thrust" (push-back) that is applied in the opposite direction. We accomplished this by constructing a position array that keeps track of object's position in the room. We calculate the distances of our camera to each object's position using the position array.
-Key part of our game is to find objects inside the museum, thus our collision also serves as the object found detection system. We set the objects to be "found" when the player goes near the object.
+The player is restricted in their movement within the margin (four walls). Whenever the user attempts to move past the margin, there's a small "thrust" (push-back) that is applied in the opposite direction. We accomplished this by constructing a position array that keeps track of the object's position in the room. We calculate the distances of our camera to each object's position using the position array.
+A key part of our game is to find objects inside the museum, thus our collision also serves as the object found detection system. We set the objects to be "found" when the player goes near the object.
+
+### Spotlight implementation
+We wanted to ensure that the idea of our game is for the player to find objects while holding a flashlight (in a dark museum). To accomplish this, we implemented SPOTLIGHT. The direction of light should be the direction of the player's point of view, that is, the region outside of the front circular area of the player should not illuminate. We use the same eye vector from the camera transform matrix in the glsl code from js code and edited the Phong_Shader class in common.js to calculate the illumination at every point of the movement. 
 
 ### Shadow
 
