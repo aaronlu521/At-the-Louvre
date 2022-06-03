@@ -498,7 +498,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let painting3_model_transform = model_transform
-      .times(Mat4.translation(-25, 25, 7))
+      .times(Mat4.translation(-10, 10, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -655,7 +655,7 @@ export class Louvre extends Louvre_Base {
     // Pedestal 3
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip3 = model_transform
-      .times(Mat4.translation(-25, 25, 3))
+      .times(Mat4.translation(-10, 10, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -666,7 +666,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body3 = model_transform
-      .times(Mat4.translation(-25, 25, 2))
+      .times(Mat4.translation(-10, 10, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -677,7 +677,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end3 = model_transform
-      .times(Mat4.translation(-25, 25, 1))
+      .times(Mat4.translation(-10, 10, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -721,7 +721,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let sphere_model_transform = model_transform
-      .times(Mat4.translation(-16, -10, 1))
+      .times(Mat4.translation(-10, -10, 1))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.rotation((Math.PI / 2) * t, 0, 1, 0));
     this.shapes.object1.draw(
