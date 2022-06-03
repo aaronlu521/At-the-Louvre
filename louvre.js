@@ -136,6 +136,14 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/StarryNight.jpg"),
       }),
 
+      texture_painting4: new Material(new Textured_Phong(), {
+        color: hex_color("#ffffff"),
+        ambient: 0.1,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/womanwithaparasol.jpg"),
+      }),
+
       start_background: new Material(new Phong_Shader(), {
         color: color(0, 0.5, 0.5, 1),
         ambient: 0,
@@ -183,8 +191,8 @@ export class Louvre_Base extends Scene {
 
     this.initial_camera_location = Mat4.look_at(
       vec3(-10, 2, 0),
-      vec3(0, 3, 0),
-      vec3(0, 1, 0)
+      vec3(0, 4, 0),
+      vec3(0, 10, 0)
     ).times(Mat4.rotation(-Math.PI / 2, 1, 0, 0));
   }
 
@@ -331,6 +339,9 @@ export class Louvre extends Louvre_Base {
       this.materials.texture_painting3
     );
 
+    let painting4_model_transform = model_transform.times(Mat4.translation(39.5,13,6)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.scale(0.1,4,3));
+    this.shapes.wall.draw(context, program_state, painting4_model_transform, this.materials.texture_painting4);
+
     // Pedestal 1
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip1 = model_transform
@@ -457,7 +468,7 @@ export class Louvre extends Louvre_Base {
 
   // Create the museum. Walls/floor/ceilings, etc.
   createRoom(context, program_state, model_transform) {
-    let floor_transform = model_transform.times(Mat4.scale(40, 40, 40));
+    let floor_transform = model_transform.times(Mat4.scale(40, 40, 20));
     this.shapes.wall.draw(
       context,
       program_state,
