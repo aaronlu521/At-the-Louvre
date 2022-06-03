@@ -136,14 +136,6 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/StarryNight.jpg"),
       }),
 
-      texture_painting4: new Material(new Textured_Phong(), {
-        color: hex_color("#ffffff"),
-        ambient: 0.1,
-        diffusivity: 0.5,
-        specularity: 0.1,
-        texture: new Texture("assets/womanwithaparasol.jpg"),
-      }),
-
       start_background: new Material(new Phong_Shader(), {
         color: color(0, 0.5, 0.5, 1),
         ambient: 0,
@@ -338,9 +330,6 @@ export class Louvre extends Louvre_Base {
       painting3_model_transform,
       this.materials.texture_painting3
     );
-
-    let painting4_model_transform = model_transform.times(Mat4.translation(39.5,13,6)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.scale(0.1,4,3));
-    this.shapes.wall.draw(context, program_state, painting4_model_transform, this.materials.texture_painting4);
 
     // Pedestal 1
     // Transform + Draw for pedestal tip
