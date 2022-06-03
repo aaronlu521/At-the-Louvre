@@ -15,13 +15,15 @@ export class Text_Line extends Shape {                           // **Text_Line*
         super("position", "normal", "texture_coord");
         this.max_size = max_size;
         var object_transform = Mat4.identity();
-        for (var i = 0; i < max_size; i++) {                                       // Each quad is a separate Square instance:
+        for (var i = 0; i < max_size; i++) {                                       
+            // Each quad is a separate Square instance:
             defs.Square.insert_transformed_copy_into(this, [], object_transform);
             object_transform.post_multiply(Mat4.translation(1.5, 0, 0));
         }
     }
 
-    set_string(line, context) {           // set_string():  Call this to overwrite the texture coordinates buffer with new
+    set_string(line, context) {
+        // set_string():  Call this to overwrite the texture coordinates buffer with new
         // values per quad, which enclose each of the string's characters.
         this.arrays.texture_coord = [];
         for (var i = 0; i < this.max_size; i++) {
