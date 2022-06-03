@@ -86,13 +86,17 @@ export class Louvre_Base extends Scene {
 
     this.pieceFound = {
       "Find the following": true,
-      Globe: false,
-      "Mona Lisa": false,
+      "Globe": false,
+      "Mona Lisa, Leonardo da Vinci": false,
+      "Almond, Vincent van Gogh": false,
+      "Starry Night, Vincent van Gogh": false,
     };
 
     this.pieceIndex = {
       0: "Globe",
-      4: "Mona Lisa",
+      4: "Mona Lisa, Leonardo da Vinci",
+      5: "Almond, Vincent van Gogh",
+      6: "Starry Night, Vincent van Gogh",
     };
 
     this.materials = {
@@ -308,7 +312,7 @@ export class Louvre_Base extends Scene {
     this.key_triggered_button(
       "Return To Initial Position",
       ["Control", "o"],
-	  () => this.attached = () => this.initial_camera_location);
+      () => this.attached = () => this.initial_camera_location);
   }
 
   // Game reset
@@ -605,24 +609,25 @@ export class Louvre extends Louvre_Base {
     this.obj_centers[1] = [
       ...cylinder_model_transform_end1.transposed()[3],
       2,
-      2,
+      2
     ];
     this.obj_centers[2] = [
       ...cylinder_model_transform_end2.transposed()[3],
       2,
-      2,
+      2
     ];
     this.obj_centers[3] = [
       ...cylinder_model_transform_end3.transposed()[3],
       2,
-      2,
+      2
     ];
     this.obj_centers[4] = [
       ...painting1_model_transform.transposed()[3],
       1,
-      2.5,
+      2.5
     ];
-
+    this.obj_centers[5] = [...painting5_model_transform.transposed()[3], 8, 8];
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 1, 2.5];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
       return [
