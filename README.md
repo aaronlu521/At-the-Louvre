@@ -42,10 +42,11 @@ The player is restricted in their movement within the margin (four walls). Whene
 A key part of our game is to find objects inside the museum, thus our collision also serves as the object found detection system. We set the objects to be "found" when the player goes near the object.
 
 ### Spotlight implementation
-We wanted to ensure that the idea of our game is for the player to find objects while holding a flashlight (in a dark museum). To accomplish this, we implemented SPOTLIGHT. The direction of light should be the direction of the player's point of view, that is, the region outside of the front circular area of the player should not illuminate. We use the same eye vector from the camera transform matrix in the glsl code from js code and edited the Phong_Shader class in common.js to calculate the illumination at every point of the movement. 
+We wanted to ensure that the idea of our game is for the player to find objects while holding a flashlight (in a dark museum). To accomplish this, we implemented SPOTLIGHT. The direction of light should be the direction of the player's point of view, that is, the region outside of the front circular area of the player should not illuminate. We use the same eye vector from the camera transform matrix in the glsl code from js code and edited the Phong_Shader class in common.js to calculate the illumination at every point of the movement.
+
+<img src='assets/shadow.png' width=600 height=300>
 
 ### Shadow
-
 
 ## Contributors
 - Aaron Lu (@aaronlu521)
