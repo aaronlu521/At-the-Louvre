@@ -43,6 +43,8 @@ export class Louvre_Base extends Scene {
     this.gameDuration = 60;
     this.timeUpdated = false;
 
+    this.background_music = new Audio("assets/song.mp3");
+    this.musicOn = false;
     this.torus_speed = -2;
     this.torus_Y = 0;
     // status
@@ -180,7 +182,7 @@ export class Louvre_Base extends Scene {
     };
 
     this.initial_camera_location = Mat4.look_at(
-      vec3(-10, 3, 0),
+      vec3(-10, 2, 0),
       vec3(0, 3, 0),
       vec3(0, 1, 0)
     ).times(Mat4.rotation(-Math.PI / 2, 1, 0, 0));
@@ -195,6 +197,11 @@ export class Louvre_Base extends Scene {
     // start
     this.key_triggered_button("Start Game", ["Control", "s"], () => {
       this.startGame = true;
+
+      if(!this.musicOn) { 
+        this.background_music.play();
+        this.musicOn = true;
+      }
     });
     this.new_line();
     this.new_line();
@@ -203,6 +210,12 @@ export class Louvre_Base extends Scene {
     this.key_triggered_button("Pause Game", ["Control", "p"], () => {
       if (this.startGame && !this.endGame) {
         this.pauseGame = !this.pauseGame;
+        if (!this.background_music.paused){
+          this.background_music.pause();
+        }
+        else {
+          this. background_music.play();
+        }
       }
     });
     this.new_line();
@@ -211,15 +224,13 @@ export class Louvre_Base extends Scene {
     // restart
     this.key_triggered_button("Restart Game", ["Control", "r"], () => {
       this.reset();
+      this.initial_camera_location;
+
     });
     this.new_line();
     this.new_line();
 
-    this.key_triggered_button(
-      "Return To Initial Position",
-      ["Control", "k"],
-      () => (this.attached = () => this.initial_camera_location)
-    );
+    this.key_triggered_button("Return To Initial Position", ["Control", "o"], () => this.attached = () => this.initial_camera_location);
   }
 
   // Game reset
@@ -238,6 +249,9 @@ export class Louvre_Base extends Scene {
     this.won = false;
     this.timeUpdated = false;
     this.currentGameTime = 60;
+    this.background_music.pause();
+    this.background_music = new Audio ("assets/song.mp3");
+    this.musicOn = false;
   }
 
   getEyeLocation(program_state) {
@@ -443,7 +457,7 @@ export class Louvre extends Louvre_Base {
 
   // Create the museum. Walls/floor/ceilings, etc.
   createRoom(context, program_state, model_transform) {
-    let floor_transform = model_transform.times(Mat4.scale(20, 20, 20));
+    let floor_transform = model_transform.times(Mat4.scale(40, 40, 40));
     this.shapes.wall.draw(
       context,
       program_state,
@@ -577,7 +591,7 @@ export class Louvre extends Louvre_Base {
     let cube_side = Mat4.rotation(0, 1, 0, 0)
       .times(Mat4.rotation(0, 0, 1, 0))
       .times(Mat4.translation(-1, 0, 1));
-
+    
     this.textOnDisplay(context, program_state, strings, cube_side);
   }
 
@@ -598,7 +612,7 @@ export class Louvre extends Louvre_Base {
     let cube_side = Mat4.rotation(0, 1, 0, 0)
       .times(Mat4.rotation(0, 0, 1, 0))
       .times(Mat4.translation(-1.9, 0, 0.9));
-
+    this.background_music.pause();
     this.textOnDisplay(context, program_state, strings, cube_side);
   }
 
@@ -702,7 +716,7 @@ export class Louvre extends Louvre_Base {
       let text_color = color(1, 0, 0, 1);
 
       if (key == 'Find the following') {
-        text_color = color(1, 1, 1, 1);
+        text_color = color(1, 1, 0, 1);
       } else if (this.pieceFound[key] == true) text_color = color(0, 1, 0, 1);
       else {
         text_color = color(1, 1, 1, 1);
@@ -728,6 +742,7 @@ export class Louvre extends Louvre_Base {
     super.display(context, program_state);
     let model_transform = Mat4.identity();
     if (this.startGame) {
+      
       if (!this.pauseGame) {
         if (!this.endGame) {
           program_state.set_camera(this.initial_camera_location);
