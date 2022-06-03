@@ -94,7 +94,7 @@ export class Louvre_Base extends Scene {
       "Find the following": true,
       "Globe": false,
       "Mona Lisa": false,
-      "Almond": false,
+      "Venus": false,
       "Starry Night": false,
       "A coin": false,
     };
@@ -102,7 +102,7 @@ export class Louvre_Base extends Scene {
     this.pieceIndex = {
       0: "Globe",
       4: "Mona Lisa",
-      5: "Almond",
+      5: "Venus",
       6: "Starry Night",
       7: "A coin"
     };
@@ -748,11 +748,11 @@ export class Louvre extends Louvre_Base {
     ];
     this.obj_centers[4] = [...painting1_model_transform.transposed()[3], 2, 6];
     this.obj_centers[5] = [
-      ...painting5_model_transform.transposed()[3],
-      13,
-      26,
+      ...painting9_model_transform.transposed()[3],
+      30,
+      20,
     ];
-    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 1, 3];
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 2, 3];
     this.obj_centers[7] = [...coin_model_transform.transposed()[3], 1, 1.5];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
