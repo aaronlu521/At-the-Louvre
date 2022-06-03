@@ -87,16 +87,16 @@ export class Louvre_Base extends Scene {
     this.pieceFound = {
       "Find the following": true,
       "Globe": false,
-      "Mona Lisa, Leonardo da Vinci": false,
-      "Almond, Vincent van Gogh": false,
-      "Starry Night, Vincent van Gogh": false,
+      "Mona Lisa": false,
+      "Almond": false,
+      "Starry Night": false,
     };
 
     this.pieceIndex = {
       0: "Globe",
-      4: "Mona Lisa, Leonardo da Vinci",
-      5: "Almond, Vincent van Gogh",
-      6: "Starry Night, Vincent van Gogh",
+      4: "Mona Lisa",
+      5: "Almond",
+      6: "Starry Night",
     };
 
     this.materials = {
@@ -605,7 +605,7 @@ export class Louvre extends Louvre_Base {
       sphere_model_transform,
       this.materials.texture_sphere
     );
-    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 3];
+    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 2, 2];
     this.obj_centers[1] = [
       ...cylinder_model_transform_end1.transposed()[3],
       2,
@@ -623,11 +623,11 @@ export class Louvre extends Louvre_Base {
     ];
     this.obj_centers[4] = [
       ...painting1_model_transform.transposed()[3],
-      1,
-      2.5
+      2,
+      6
     ];
-    this.obj_centers[5] = [...painting5_model_transform.transposed()[3], 8, 8];
-    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 1, 2.5];
+    this.obj_centers[5] = [...painting5_model_transform.transposed()[3], 15,30];
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 4, 10];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
       return [
@@ -889,11 +889,11 @@ export class Louvre extends Louvre_Base {
         );
       }
     }
-    cube_side = cube_side.times(Mat4.scale(0.5, 0.75, 0));
+    cube_side = cube_side.times(Mat4.scale(0.55, 0.75, 0));
     cube_side = cube_side.times(Mat4.translation(-30, 0, 0));
 
     for (const key in this.pieceFound) {
-      cube_side = cube_side.times(Mat4.translation(0, -2, 0));
+      cube_side = cube_side.times(Mat4.translation(0, -3.5, 0));
       let obj_strings = ["" + key];
       let text_color = color(1, 0, 0, 1);
 
