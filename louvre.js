@@ -749,8 +749,8 @@ export class Louvre extends Louvre_Base {
     this.obj_centers[4] = [...painting1_model_transform.transposed()[3], 2, 6];
     this.obj_centers[5] = [
       ...painting5_model_transform.transposed()[3],
-      15,
-      30,
+      13,
+      26,
     ];
     this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 4, 10];
     this.obj_centers[7] = [...coin_model_transform.transposed()[3], 1, 1.5];
