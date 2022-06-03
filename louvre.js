@@ -730,7 +730,7 @@ export class Louvre extends Louvre_Base {
       sphere_model_transform,
       this.materials.texture_sphere
     );
-    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 2, 2];
+    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 3];
     this.obj_centers[1] = [
       ...cylinder_model_transform_end1.transposed()[3],
       2,
