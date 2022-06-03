@@ -977,6 +977,11 @@ const Movement_Controls = defs.Movement_Controls =
             this.new_line(); this.new_line();
             this.key_triggered_button("View Left", ["m"], () => this.rolly = 1, undefined, () => this.rolly = 0);
             this.key_triggered_button("View Right", ["n"], () => this.rolly = -1, undefined, () => this.rolly = 0);
+            this.key_triggered_button("Up", ["c"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
+            this.new_line();
+            this.key_triggered_button("Down", ["z"], () => this.thrust[1] = 1, undefined, () => this.thrust[1] = 0);
+            this.new_line();
+            this.key_triggered_button("(Un)freeze mouse look around", ["f"], () => this.look_around_locked ^= 1, "#8B8885");
             this.new_line();
         }
 
