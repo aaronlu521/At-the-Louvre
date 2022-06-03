@@ -1377,7 +1377,7 @@ const Movement_Controls =
       );
       this.key_triggered_button(
         "Up",
-        ["i"],
+        ["c"],
         () => (this.thrust[1] = -1),
         undefined,
         () => (this.thrust[1] = 0)
@@ -1385,7 +1385,7 @@ const Movement_Controls =
       this.new_line();
       this.key_triggered_button(
         "Down",
-        ["k"],
+        ["z"],
         () => (this.thrust[1] = 1),
         undefined,
         () => (this.thrust[1] = 0)
