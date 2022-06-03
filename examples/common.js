@@ -570,7 +570,7 @@ const Funny_Shader = defs.Funny_Shader =
 
 const Phong_Shader = defs.Phong_Shader =
     class Phong_Shader extends Shader {
-        // **Phong_Shader** is a subclass of Shader, which stores and maanges a GPU program.
+        // **Phong_Shader** is a subclass of Shader, which stores and manages a GPU program.
         // Graphic cards prior to year 2000 had shaders like this one hard-coded into them
         // instead of customizable shaders.  "Phong-Blinn" Shading here is a process of
         // determining brightness of pixels via vector math.  It compares the normal vector
@@ -590,7 +590,8 @@ const Phong_Shader = defs.Phong_Shader =
                 uniform vec4 light_positions_or_vectors[N_LIGHTS], light_colors[N_LIGHTS];
                 uniform float light_attenuation_factors[N_LIGHTS];
                 uniform vec4 shape_color;
-                uniform vec3 squared_scale, camera_center;
+                uniform vec3 squared_scale, camera_center, camera_direction;
+                float u_limit = 0.95;
         
                 // Specifier "varying" means a variable's final value will be passed from the vertex shader
                 // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
@@ -611,7 +612,12 @@ const Phong_Shader = defs.Phong_Shader =
                         vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
                                                        light_positions_or_vectors[i].w * vertex_worldspace;                                             
                         float distance_to_light = length( surface_to_light_vector );
-        
+                        
+                        vec3 surfaceToLightDirection = normalize(surface_to_light_vector);
+                        vec3 u_lightDirection = normalize(camera_direction);
+                        float dotFromDirection = dot(surfaceToLightDirection,
+                               -u_lightDirection);
+            
                         vec3 L = normalize( surface_to_light_vector );
                         vec3 H = normalize( L + E );
                         // Compute the diffuse and specular components from the Phong
@@ -622,7 +628,12 @@ const Phong_Shader = defs.Phong_Shader =
                         
                         vec3 light_contribution = shape_color.xyz * light_colors[i].xyz * diffusivity * diffuse
                                                                   + light_colors[i].xyz * specularity * specular;
+                        if (dotFromDirection < u_limit) {
+                            attenuation = 0.0;
+                        }
+                        
                         result += attenuation * light_contribution;
+                        
                       }
                     return result;
                   } `;
@@ -670,9 +681,19 @@ const Phong_Shader = defs.Phong_Shader =
         }
 
         send_gpu_state(gl, gpu, gpu_state, model_transform) {
+
             // send_gpu_state():  Send the state of our whole drawing context to the GPU.
             const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
             gl.uniform3fv(gpu.camera_center, camera_center);
+
+
+            // send the eye vector to the GPU.
+            const E = vec4(0, 0, -1, 0), inverse_camera_direction = gpu_state.camera_transform.times(E).to3()
+
+            // console.log(camera_direction)
+            gl.uniform3fv(gpu.camera_direction, inverse_camera_direction);
+
+
             // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
             const squared_scale = model_transform.reduce(
                 (acc, r) => {
@@ -718,7 +739,6 @@ const Phong_Shader = defs.Phong_Shader =
         }
     }
 
-
 const Textured_Phong = defs.Textured_Phong =
     class Textured_Phong extends Phong_Shader {
         // **Textured_Phong** is a Phong Shader extended to addditionally decal a
@@ -753,8 +773,7 @@ const Textured_Phong = defs.Textured_Phong =
             return this.shared_glsl_code() + `
                 varying vec2 f_tex_coord;
                 uniform sampler2D texture;
-                uniform float animation_time;
-                
+        
                 void main(){
                     // Sample the texture image in the correct place:
                     vec4 tex_color = texture2D( texture, f_tex_coord );
@@ -769,8 +788,7 @@ const Textured_Phong = defs.Textured_Phong =
         update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
             // update_GPU(): Add a little more to the base class's version of this method.
             super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
-            // Updated for assignment 4
-            context.uniform1f(gpu_addresses.animation_time, gpu_state.animation_time / 1000);
+
             if (material.texture && material.texture.ready) {
                 // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
                 context.uniform1i(gpu_addresses.texture, 0);
@@ -780,6 +798,29 @@ const Textured_Phong = defs.Textured_Phong =
         }
     }
 
+const Textured_Phong_text = defs.Textured_Phong_text =
+    class Textured_Phong_text extends Textured_Phong {
+        vertex_glsl_code() {
+            return this.shared_glsl_code() + `
+                varying vec2 f_tex_coord;
+                attribute vec3 position, normal;                            
+                // Position is expressed in object coordinates.
+                attribute vec2 texture_coord;
+                
+                uniform mat4 model_transform;
+                uniform mat4 projection_camera_model_transform;
+        
+                void main(){                                                                   
+                    // The vertex's final resting place (in NDCS):
+                    gl_Position =  model_transform * vec4( position, 1.0 );
+                    // The final normal vector in screen space.
+                    N = normalize( mat3( model_transform ) * normal / squared_scale);
+                    vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+                    // Turn the per-vertex texture coordinate into an interpolated variable.
+                    f_tex_coord = texture_coord;
+                  } `;
+        }
+    }
 
 const Fake_Bump_Map = defs.Fake_Bump_Map =
     class Fake_Bump_Map extends Textured_Phong {
@@ -817,14 +858,32 @@ const Movement_Controls = defs.Movement_Controls =
         constructor() {
             super();
             const data_members = {
-                roll: 0, look_around_locked: true,
+                rollz: 0, rolly: 0, rollx: 0, look_around_locked: true,
                 thrust: vec3(0, 0, 0), pos: vec3(0, 0, 0), z_axis: vec3(0, 0, 0),
                 radians_per_frame: 1 / 200, meters_per_frame: 20, speed_multiplier: 1
             };
             Object.assign(this, data_members);
 
+            // Define bounds of the room
+            this.bounds = 16;
+
+            //Define bounds of objects
+            this.objbounds = {
+                obj1: {x1: 0, x2: -3, y1: 0, y2: -3}, //rubix cube
+                obj2: {x1: 5, x2: 2, y1: 5, y2: 2}, //globe
+                obj3: {x1: 3, x2: 1, y1: 3, y2: 0}, //cow
+                obj4: {x1: 6, x2: 3, y1: -6, y2: -3}, //sphere
+                obj5: {x1: 12, x2: 9, y1: -10, y2: -13} //box
+            }
+
+
             this.mouse_enabled_canvases = new Set();
             this.will_take_over_graphics_state = true;
+
+            this.left = false;
+            this.right = false;
+            this.forward = false;
+            this.backward = false;
         }
 
         set_recipient(matrix_closure, inverse_closure) {
@@ -881,58 +940,43 @@ const Movement_Controls = defs.Movement_Controls =
             this.new_line();
             this.new_line();
 
-            this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
-            this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
-            this.new_line();
-            this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
-            this.key_triggered_button("Back", ["s"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
-            this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
-            this.new_line();
-            this.key_triggered_button("Down", ["z"], () => this.thrust[1] = 1, undefined, () => this.thrust[1] = 0);
+            this.live_string(box => box.textContent = "Player movement");
+            this.new_line(); this.new_line();
+            this.key_triggered_button("Forward", ["w"], () => {
+                this.forward = true;
+                this.thrust[2] = 1;
+            }, undefined, () => {
+                this.forward = false;    
+                this.thrust[2] = 0;
+                
+            });
+            this.key_triggered_button("Left", ["a"], () => {
+                this.left = true;
+                this.thrust[0] = 1;
+            }, undefined, () => {
+                this.left = false;
+                this.thrust[0] = 0
+            });
+            this.key_triggered_button("Back", ["s"], () => {
+                this.backward = true;
+                this.thrust[2] = -1;
+            }, undefined, () => {
+                this.backward = false;
+                this.thrust[2] = 0
+            });
+            this.key_triggered_button("Right", ["d"], () => {
+                this.right = true;
+                this.thrust[0] = -1;
+            }, undefined, () => {
+                this.right = false;
+                this.thrust[0] = 0
+            });
+            this.new_line(); this.new_line();
 
-            const speed_controls = this.control_panel.appendChild(document.createElement("span"));
-            speed_controls.style.margin = "30px";
-            this.key_triggered_button("-", ["o"], () =>
-                this.speed_multiplier /= 1.2, undefined, undefined, undefined, speed_controls);
-            this.live_string(box => {
-                box.textContent = "Speed: " + this.speed_multiplier.toFixed(2)
-            }, speed_controls);
-            this.key_triggered_button("+", ["p"], () =>
-                this.speed_multiplier *= 1.2, undefined, undefined, undefined, speed_controls);
-            this.new_line();
-            this.key_triggered_button("Roll left", [","], () => this.roll = 1, undefined, () => this.roll = 0);
-            this.key_triggered_button("Roll right", ["."], () => this.roll = -1, undefined, () => this.roll = 0);
-            this.new_line();
-            this.key_triggered_button("(Un)freeze mouse look around", ["f"], () => this.look_around_locked ^= 1, "#8B8885");
-            this.new_line();
-            this.key_triggered_button("Go to world origin", ["r"], () => {
-                this.matrix().set_identity(4, 4);
-                this.inverse().set_identity(4, 4)
-            }, "#8B8885");
-            this.new_line();
-
-            this.key_triggered_button("Look at origin from front", ["1"], () => {
-                this.inverse().set(Mat4.look_at(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)));
-                this.matrix().set(Mat4.inverse(this.inverse()));
-            }, "#8B8885");
-            this.new_line();
-            this.key_triggered_button("from right", ["2"], () => {
-                this.inverse().set(Mat4.look_at(vec3(10, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)));
-                this.matrix().set(Mat4.inverse(this.inverse()));
-            }, "#8B8885");
-            this.key_triggered_button("from rear", ["3"], () => {
-                this.inverse().set(Mat4.look_at(vec3(0, 0, -10), vec3(0, 0, 0), vec3(0, 1, 0)));
-                this.matrix().set(Mat4.inverse(this.inverse()));
-            }, "#8B8885");
-            this.key_triggered_button("from left", ["4"], () => {
-                this.inverse().set(Mat4.look_at(vec3(-10, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)));
-                this.matrix().set(Mat4.inverse(this.inverse()));
-            }, "#8B8885");
-            this.new_line();
-            this.key_triggered_button("Attach to global camera", ["Shift", "R"],
-                () => {
-                    this.will_take_over_graphics_state = true
-                }, "#8B8885");
+            this.live_string(box => box.textContent = "Camera movement");
+            this.new_line(); this.new_line();
+            this.key_triggered_button("View Left", ["m"], () => this.rolly = 1, undefined, () => this.rolly = 0);
+            this.key_triggered_button("View Right", ["n"], () => this.rolly = -1, undefined, () => this.rolly = 0);
             this.new_line();
         }
 
@@ -955,8 +999,18 @@ const Movement_Controls = defs.Movement_Controls =
                     this.matrix().post_multiply(Mat4.rotation(-velocity, i, 1 - i, 0));
                     this.inverse().pre_multiply(Mat4.rotation(+velocity, i, 1 - i, 0));
                 }
-            this.matrix().post_multiply(Mat4.rotation(-.1 * this.roll, 0, 0, 1));
-            this.inverse().pre_multiply(Mat4.rotation(+.1 * this.roll, 0, 0, 1));
+
+
+            this.matrix().post_multiply(Mat4.rotation(-.1 * this.rollz, 0, 0, 1));
+            this.inverse().pre_multiply(Mat4.rotation(+.1 * this.rollz, 0, 0, 1));
+
+            this.matrix().post_multiply(Mat4.rotation(-.1 * this.rolly, 0, 1, 0));
+            this.inverse().pre_multiply(Mat4.rotation(+.1 * this.rolly, 0, 1, 0));
+
+            this.matrix().post_multiply(Mat4.rotation(-.1 * this.rollx, 1, 0, 0));
+            this.inverse().pre_multiply(Mat4.rotation(+.1 * this.rollx, 1, 0, 0));
+
+
             // Now apply translation movement of the camera, in the newest local coordinate frame.
             this.matrix().post_multiply(Mat4.translation(...this.thrust.times(-meters_per_frame)));
             this.inverse().pre_multiply(Mat4.translation(...this.thrust.times(+meters_per_frame)));
@@ -982,6 +1036,7 @@ const Movement_Controls = defs.Movement_Controls =
 
         display(context, graphics_state, dt = graphics_state.animation_delta_time / 1000) {
             // The whole process of acting upon controls begins here.
+
             const m = this.speed_multiplier * this.meters_per_frame,
                 r = this.speed_multiplier * this.radians_per_frame;
 
@@ -994,6 +1049,28 @@ const Movement_Controls = defs.Movement_Controls =
                 this.add_mouse_controls(context.canvas);
                 this.mouse_enabled_canvases.add(context.canvas)
             }
+    
+            //detect bounds
+            if (this.pos[0] > this.bounds && this.left)
+                this.thrust[0] = -0.1;
+            else if(this.pos[0] < -this.bounds && this.right) 
+                this.thrust[0] = 0.1;
+
+            if(this.pos[2] > this.bounds && this.forward)
+                this.thrust[2] = -0.1;
+            else if(this.pos[2] < -this.bounds && this.backward)
+                this.thrust[2] = 0.1;
+
+            // Variables required for darkhouse.js
+            defs.forward = this.forward;
+            defs.backward = this.backward;
+            defs.left = this.left;
+            defs.right = this.right;
+
+            defs.canvas_mouse_pos = this.mouse.from_center;
+            defs.pos = this.pos;
+            defs.thrust = this.thrust;
+            
             // Move in first-person.  Scale the normal camera aiming speed by dt for smoothness:
             this.first_person_flyaround(dt * r, dt * m);
             // Also apply third-person "arcball" camera mode if a mouse drag is occurring:
