@@ -752,7 +752,7 @@ export class Louvre extends Louvre_Base {
       13,
       26,
     ];
-    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 4, 10];
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 2, 6];
     this.obj_centers[7] = [...coin_model_transform.transposed()[3], 1, 1.5];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
