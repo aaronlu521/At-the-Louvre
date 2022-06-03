@@ -730,7 +730,7 @@ export class Louvre extends Louvre_Base {
       sphere_model_transform,
       this.materials.texture_sphere
     );
-    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 3];
+    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 1];
     this.obj_centers[1] = [
       ...cylinder_model_transform_end1.transposed()[3],
       2,
@@ -752,7 +752,7 @@ export class Louvre extends Louvre_Base {
       13,
       26,
     ];
-    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 2, 6];
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 1, 3];
     this.obj_centers[7] = [...coin_model_transform.transposed()[3], 1, 1.5];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
