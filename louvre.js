@@ -1,5 +1,11 @@
 import { defs, tiny } from "./examples/common.js";
 import { Text_Line } from "./examples/text-demo.js";
+import {
+  Color_Phong_Shader,
+  Shadow_Textured_Phong_Shader,
+  Buffered_Texture,
+  LIGHT_DEPTH_TEX_SIZE,
+} from "./examples/shadow-demo-shaders.js";
 
 // Pull these names into this module's scope for convenience:
 const {
@@ -19,6 +25,7 @@ const {
 
 const {
   Triangle,
+  Closed_Cone,
   Square,
   Tetrahedron,
   Torus,
@@ -55,10 +62,12 @@ export class Louvre_Base extends Scene {
 
     this.shapes = {
       cube: new Cube(),
+      cone: new Closed_Cone(8, 8),
       wall: new Square(),
       text: new Text_Line(35),
       torus: new defs.Torus(3, 15),
       cylinder: new defs.Capped_Cylinder(8, 8),
+      sphere: new defs.Subdivision_Sphere(4),
       object1: new defs.Subdivision_Sphere(4),
       object2: new defs.Subdivision_Sphere(2),
     };
@@ -85,20 +94,27 @@ export class Louvre_Base extends Scene {
       "Find the following": true,
       Globe: false,
       "Mona Lisa": false,
+      Almond: false,
+      "Starry Night": false,
     };
 
     this.pieceIndex = {
       0: "Globe",
       4: "Mona Lisa",
+      5: "Almond",
+      6: "Starry Night",
     };
 
+    this.pure = new Material(new Color_Phong_Shader(), {});
+
     this.materials = {
-      texture_floor: new Material(new Textured_Phong(), {
-        color: hex_color("#000000"),
+      texture_floor: new Material(new Shadow_Textured_Phong_Shader(1), {
+        color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
-        texture: new Texture("assets/floor.jpg"),
+        color_texture: new Texture("assets/floor.jpg"),
+        light_depth_texture: null,
       }),
 
       texture_ceiling: new Material(new Textured_Phong(), {
@@ -109,12 +125,13 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/ceiling.jpg"),
       }),
 
-      texture_wall: new Material(new Textured_Phong(), {
-        color: hex_color("#000000"),
+      texture_wall: new Material(new Shadow_Textured_Phong_Shader(1), {
+        color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
-        texture: new Texture("assets/wall.jpg"),
+        color_texture: new Texture("assets/wall.jpg"),
+        light_depth_texture: null,
       }),
 
       texture_sphere: new Material(new Textured_Phong(), {
@@ -149,6 +166,54 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/StarryNight.jpg"),
       }),
 
+      texture_painting4: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/June.jpg"),
+      }),
+
+      texture_painting5: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Almond.jpg"),
+      }),
+
+      texture_painting6: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Earring.jpg"),
+      }),
+
+      texture_painting7: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Pair.jpg"),
+      }),
+
+      texture_painting8: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/Cafe.jpg"),
+      }),
+
+      texture_painting9: new Material(new Textured_Phong(), {
+        color: hex_color("#000000"),
+        ambient: 0.85,
+        diffusivity: 0.5,
+        specularity: 0.1,
+        texture: new Texture("assets/venus.jpg"),
+      }),
+
       start_background: new Material(new Phong_Shader(), {
         color: color(0, 0.5, 0.5, 1),
         ambient: 0,
@@ -172,6 +237,13 @@ export class Louvre_Base extends Scene {
         color: hex_color("#0398FC"),
       }),
 
+      cone_material: new Material(new defs.Phong_Shader(), {
+        ambient: 0.1,
+        diffusivity: 1,
+        specularity: 0.5,
+        color: hex_color("#FFFF00"),
+      }),
+
       text_image: new Material(new Textured_Phong(1), {
         ambient: 1,
         diffusivity: 0,
@@ -192,6 +264,13 @@ export class Louvre_Base extends Scene {
         specularity: 0.5,
         color: hex_color("#43464B"),
       }),
+
+      sphere_material: new Material(new defs.Phong_Shader(), {
+        ambient: 0.1,
+        diffusivity: 1,
+        specularity: 0.5,
+        color: hex_color("#ff0000"),
+      }),
     };
 
     this.initial_camera_location = Mat4.look_at(
@@ -199,6 +278,8 @@ export class Louvre_Base extends Scene {
       vec3(0, 7, 0),
       vec3(0, 1, 0)
     ).times(Mat4.rotation(-Math.PI / 2, 1, 0, 0));
+
+    this.init_ok = false;
   }
 
   // Control maker
@@ -236,7 +317,6 @@ export class Louvre_Base extends Scene {
     // restart
     this.key_triggered_button("Restart Game", ["Control", "r"], () => {
       this.reset();
-      program_state.set_camera(this.initial_camera_location);
     });
     this.new_line();
     this.new_line();
@@ -244,10 +324,76 @@ export class Louvre_Base extends Scene {
     this.key_triggered_button(
       "Return To Initial Position",
       ["Control", "o"],
-      () => {
-        program_state.set_camera(this.initial_camera_location);
-      }
+      () => (this.attached = () => this.initial_camera_location)
     );
+  }
+
+  texture_buffer_init(gl) {
+    // Depth Texture
+    this.lightDepthTexture = gl.createTexture();
+    // Bind it to TinyGraphics
+    this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
+    this.materials.texture_floor.light_depth_texture = this.light_depth_texture;
+    // TODO: Add remaining textures
+
+    this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
+    gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D, // target
+      0, // mip level
+      gl.DEPTH_COMPONENT, // internal format
+      this.lightDepthTextureSize, // width
+      this.lightDepthTextureSize, // height
+      0, // border
+      gl.DEPTH_COMPONENT, // format
+      gl.UNSIGNED_INT, // type
+      null
+    ); // data
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    // Depth Texture Buffer
+    this.lightDepthFramebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, // target
+      gl.DEPTH_ATTACHMENT, // attachment point
+      gl.TEXTURE_2D, // texture target
+      this.lightDepthTexture, // texture
+      0
+    ); // mip level
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // create a color texture of the same size as the depth texture
+    // see article why this is needed_
+    this.unusedTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.unusedTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      this.lightDepthTextureSize,
+      this.lightDepthTextureSize,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // attach it to the framebuffer
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, // target
+      gl.COLOR_ATTACHMENT0, // attachment point
+      gl.TEXTURE_2D, // texture target
+      this.unusedTexture, // texture
+      0
+    ); // mip level
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   // Game reset
@@ -307,7 +453,7 @@ export class Louvre extends Louvre_Base {
     let dt = program_state.animation_delta_time / 1000;
 
     let painting1_model_transform = model_transform
-      .times(Mat4.translation(10, 10, 7))
+      .times(Mat4.translation(20, 20, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -319,7 +465,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let painting2_model_transform = model_transform
-      .times(Mat4.translation(-10, -10, 7))
+      .times(Mat4.translation(-15, -20, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -331,7 +477,7 @@ export class Louvre extends Louvre_Base {
     );
 
     let painting3_model_transform = model_transform
-      .times(Mat4.translation(-10, 10, 7))
+      .times(Mat4.translation(-25, 25, 7))
       .times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
       .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
       .times(Mat4.scale(0.1, 3, 2));
@@ -342,10 +488,84 @@ export class Louvre extends Louvre_Base {
       this.materials.texture_painting3
     );
 
+    let painting4_model_transform = model_transform
+      .times(Mat4.translation(-40, 20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting4_model_transform,
+      this.materials.texture_painting4
+    );
+
+    let painting5_model_transform = model_transform
+      .times(Mat4.translation(-40, -20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting5_model_transform,
+      this.materials.texture_painting5
+    );
+
+    let painting6_model_transform = model_transform
+      .times(Mat4.translation(40, 20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting6_model_transform,
+      this.materials.texture_painting6
+    );
+
+    let painting7_model_transform = model_transform
+      .times(Mat4.translation(40, -20, 20))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+      .times(Mat4.scale(0.1, 15, 10));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting7_model_transform,
+      this.materials.texture_painting7
+    );
+
+    let painting8_model_transform = model_transform
+      .times(Mat4.translation(1, 40, 15))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, Math.PI / 2, 0, 0))
+      .times(Mat4.rotation(0, Math.PI / 2, 1, 0))
+      .times(Mat4.scale(15, 10, 0.1));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting8_model_transform,
+      this.materials.texture_painting8
+    );
+
+    let painting9_model_transform = model_transform
+      .times(Mat4.translation(1, -40, 15))
+      //.times(Mat4.rotation(0.5 * Math.sin(t) * Math.cos(t), 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 2, Math.PI / 2, 0, 0))
+      .times(Mat4.rotation(0, Math.PI / 2, 1, 0))
+      .times(Mat4.scale(15, 10, 0.1));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      painting9_model_transform,
+      this.materials.texture_painting9
+    );
+
     // Pedestal 1
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip1 = model_transform
-      .times(Mat4.translation(10, 10, 3))
+      .times(Mat4.translation(20, 20, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -356,7 +576,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body1 = model_transform
-      .times(Mat4.translation(10, 10, 2))
+      .times(Mat4.translation(20, 20, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -367,7 +587,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end1 = model_transform
-      .times(Mat4.translation(10, 10, 1))
+      .times(Mat4.translation(20, 20, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -379,7 +599,7 @@ export class Louvre extends Louvre_Base {
     // Pedestal 2
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip2 = model_transform
-      .times(Mat4.translation(-10, -10, 3))
+      .times(Mat4.translation(-15, -20, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -390,7 +610,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body2 = model_transform
-      .times(Mat4.translation(-10, -10, 2))
+      .times(Mat4.translation(-15, -20, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -401,7 +621,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end2 = model_transform
-      .times(Mat4.translation(-10, -10, 1))
+      .times(Mat4.translation(-15, -20, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
@@ -414,7 +634,7 @@ export class Louvre extends Louvre_Base {
     // Pedestal 3
     // Transform + Draw for pedestal tip
     let cylinder_model_transform_tip3 = model_transform
-      .times(Mat4.translation(-10, 10, 3))
+      .times(Mat4.translation(-25, 25, 3))
       .times(Mat4.scale(1, 1, 1));
     this.shapes.cylinder.draw(
       context,
@@ -425,7 +645,7 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal body
     let cylinder_model_transform_body3 = model_transform
-      .times(Mat4.translation(-10, 10, 2))
+      .times(Mat4.translation(-25, 25, 2))
       .times(Mat4.scale(2, 2, 1));
     this.shapes.cylinder.draw(
       context,
@@ -436,13 +656,43 @@ export class Louvre extends Louvre_Base {
 
     // Transform + Draw for pedestal end
     let cylinder_model_transform_end3 = model_transform
-      .times(Mat4.translation(-10, 10, 1))
+      .times(Mat4.translation(-25, 25, 1))
       .times(Mat4.scale(3, 3, 1));
     this.shapes.cylinder.draw(
       context,
       program_state,
       cylinder_model_transform_end3,
       this.materials.cylinder_material
+    );
+
+    let cone_model_transform = model_transform
+      .times(Mat4.translation(18, 14, 2))
+      .times(Mat4.scale(2, 2, 2));
+    this.shapes.cone.draw(
+      context,
+      program_state,
+      cone_model_transform,
+      this.materials.cone_material
+    );
+
+    let cube_model_transform = model_transform
+      .times(Mat4.translation(22.5, 12, 2.5))
+      .times(Mat4.scale(2.5, 2.5, 2.5));
+    this.shapes.cube.draw(
+      context,
+      program_state,
+      cube_model_transform,
+      this.materials.cube_material
+    );
+
+    let sphere_toy_model_transform = model_transform
+      .times(Mat4.translation(18, 11, 1))
+      .times(Mat4.scale(1, 1, 1));
+    this.shapes.sphere.draw(
+      context,
+      program_state,
+      sphere_toy_model_transform,
+      this.materials.sphere_material
     );
 
     let sphere_model_transform = model_transform
@@ -455,7 +705,7 @@ export class Louvre extends Louvre_Base {
       sphere_model_transform,
       this.materials.texture_sphere
     );
-    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 3, 3];
+    this.obj_centers[0] = [...sphere_model_transform.transposed()[3], 2, 2];
     this.obj_centers[1] = [
       ...cylinder_model_transform_end1.transposed()[3],
       2,
@@ -471,12 +721,13 @@ export class Louvre extends Louvre_Base {
       2,
       2,
     ];
-    this.obj_centers[4] = [
-      ...painting1_model_transform.transposed()[3],
-      1,
-      2.5,
+    this.obj_centers[4] = [...painting1_model_transform.transposed()[3], 2, 6];
+    this.obj_centers[5] = [
+      ...painting5_model_transform.transposed()[3],
+      15,
+      30,
     ];
-
+    this.obj_centers[6] = [...painting3_model_transform.transposed()[3], 4, 10];
     this.distances = this.obj_centers.map((pos) => {
       const camera_position = this.getEyeLocation(program_state);
       return [
@@ -490,13 +741,21 @@ export class Louvre extends Louvre_Base {
   }
 
   // Create the museum. Walls/floor/ceilings, etc.
-  createRoom(context, program_state, model_transform) {
+  createRoom(
+    context,
+    program_state,
+    model_transform,
+    shadow_pass = false,
+    draw_shadow = false
+  ) {
+    program_state.draw_shadow = draw_shadow;
+
     let floor_transform = model_transform.times(Mat4.scale(40, 40, 20));
     this.shapes.wall.draw(
       context,
       program_state,
       floor_transform,
-      this.materials.texture_floor
+      shadow_pass ? this.materials.texture_floor : this.pure
     );
 
     let ceiling_transform = floor_transform
@@ -506,7 +765,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       ceiling_transform,
-      this.materials.texture_ceiling
+      shadow_pass ? this.materials.texture_ceiling : this.pure
     );
 
     let wall1_transform = floor_transform
@@ -517,7 +776,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall1_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall2_transform = floor_transform
@@ -528,7 +787,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall2_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall3_transform = floor_transform
@@ -539,7 +798,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall3_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall4_transform = floor_transform
@@ -550,7 +809,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall4_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
   }
 
@@ -738,11 +997,11 @@ export class Louvre extends Louvre_Base {
         );
       }
     }
-    cube_side = cube_side.times(Mat4.scale(0.5, 0.75, 0));
+    cube_side = cube_side.times(Mat4.scale(0.55, 0.75, 0));
     cube_side = cube_side.times(Mat4.translation(-30, 0, 0));
 
     for (const key in this.pieceFound) {
-      cube_side = cube_side.times(Mat4.translation(0, -2, 0));
+      cube_side = cube_side.times(Mat4.translation(0, -3.5, 0));
       let obj_strings = ["" + key];
       let text_color = color(1, 0, 0, 1);
 
@@ -771,25 +1030,50 @@ export class Louvre extends Louvre_Base {
   // Initialize game and display
   display(context, program_state) {
     super.display(context, program_state);
+
+    const gl = context.context;
+
+    if (!this.init_ok) {
+      const ext = gl.getExtension("WEBGL_depth_texture");
+      if (!ext) {
+        return alert("need WEBGL_depth_texture"); // eslint-disable-line
+      }
+      this.texture_buffer_init(gl);
+
+      this.init_ok = true;
+    }
+
     let model_transform = Mat4.identity();
+
     if (this.startGame) {
       if (!this.pauseGame) {
         if (!this.endGame) {
           program_state.set_camera(this.initial_camera_location);
 
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+          gl.viewport(
+            0,
+            0,
+            this.lightDepthTextureSize,
+            this.lightDepthTextureSize
+          );
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          program_state.light_view_mat = this.getEyeLocation(program_state);
+          program_state.light_proj_mat = program_state.projection_transform;
+          program_state.light_tex_mat = program_state.projection_transform;
+          program_state.view_mat = this.getEyeLocation(program_state);
+
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+          program_state.view_mat = program_state.camera_inverse;
+
           this.getGameState();
           this.showTOD(context, program_state, model_transform);
           this.updateTimer(program_state);
-          this.createRoom(context, program_state, model_transform);
+          this.createRoom(context, program_state, model_transform, true, true);
           this.createPieces(context, program_state, model_transform);
-
-          let mouse_X = 0;
-          let mouse_Y = 0;
-
-          if (defs.canvas_mouse_pos) {
-            mouse_X = defs.canvas_mouse_pos[0];
-            mouse_Y = defs.canvas_mouse_pos[1];
-          }
         } else {
           if (this.won) {
             this.setWonScreen(context, program_state, model_transform);
