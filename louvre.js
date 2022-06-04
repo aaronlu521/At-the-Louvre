@@ -16,23 +16,17 @@ const {
   hex_color,
   Mat4,
   Light,
-  Shape,
   Material,
-  Shader,
   Texture,
   Scene,
 } = tiny;
 
 const {
-  Triangle,
   Closed_Cone,
   Square,
-  Tetrahedron,
   Torus,
-  Windmill,
   Cube,
   Subdivision_Sphere,
-  Cylindrical_Tube,
   Capped_Cylinder,
   Textured_Phong,
   Textured_Phong_text,
@@ -50,12 +44,9 @@ export class Louvre_Base extends Scene {
     this.currentGameTime = 60;
     this.gameDuration = 60;
     this.timeUpdated = false;
-
     this.background_music = new Audio("assets/song.mp3");
     this.musicOn = false;
-    // status
     this.won = false;
-
     this.obj_centers = new Array(9).fill(0);
     this.collision_bounce = false;
 
@@ -92,9 +83,9 @@ export class Louvre_Base extends Scene {
 
     this.pieceFound = {
       "Find the following": true,
-      "Globe": false,
+      Globe: false,
       "Mona Lisa": false,
-      "Venus": false,
+      Venus: false,
       "Starry Night": false,
       "A coin": false,
     };
@@ -104,7 +95,7 @@ export class Louvre_Base extends Scene {
       4: "Mona Lisa",
       5: "Venus",
       6: "Starry Night",
-      7: "A coin"
+      7: "A coin",
     };
 
     this.pure = new Material(new Color_Phong_Shader(), {});
@@ -127,12 +118,13 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/ceiling.jpg"),
       }),
 
-      texture_wall: new Material(new Textured_Phong(), {
+      texture_wall: new Material(new Shadow_Textured_Phong_Shader(1), {
         color: hex_color("#545454"),
         ambient: 0.5,
         diffusivity: 1,
         specularity: 0.1,
-        texture: new Texture("assets/wall.jpg"),
+        color_texture: new Texture("assets/wall.jpg"),
+        light_depth_texture: null,
       }),
 
       texture_sphere: new Material(new Textured_Phong(), {
@@ -145,7 +137,7 @@ export class Louvre_Base extends Scene {
       //painting textures
       texture_painting1: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/monalisa.jpg"),
@@ -153,7 +145,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting2: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/Sunflowers.jpg"),
@@ -161,7 +153,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting3: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/StarryNight.jpg"),
@@ -169,7 +161,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting4: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/June.jpg"),
@@ -177,7 +169,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting5: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/Almond.jpg"),
@@ -185,7 +177,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting6: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/Earring.jpg"),
@@ -193,7 +185,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting7: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/Pair.jpg"),
@@ -201,7 +193,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting8: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/Cafe.jpg"),
@@ -209,7 +201,7 @@ export class Louvre_Base extends Scene {
 
       texture_painting9: new Material(new Textured_Phong(), {
         color: hex_color("#000000"),
-        ambient: 0.85,
+        ambient: 0.75,
         diffusivity: 0.5,
         specularity: 0.1,
         texture: new Texture("assets/venus.jpg"),
@@ -266,14 +258,14 @@ export class Louvre_Base extends Scene {
         texture: new Texture("assets/text.png"),
       }),
 
-      cylinder_material: new Material(new defs.Phong_Shader(), {
+      cylinder_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
         color: hex_color("#43464B"),
       }),
 
-      sphere_material: new Material(new defs.Phong_Shader(), {
+      sphere_material: new Material(new Phong_Shader(), {
         ambient: 0.1,
         diffusivity: 1,
         specularity: 0.5,
@@ -343,7 +335,9 @@ export class Louvre_Base extends Scene {
     this.lightDepthTexture = gl.createTexture();
     // Bind it to TinyGraphics
     this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
+
     this.materials.texture_floor.light_depth_texture = this.light_depth_texture;
+    this.materials.texture_wall.light_depth_texture = this.light_depth_texture;
 
     this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
     gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
@@ -405,7 +399,6 @@ export class Louvre_Base extends Scene {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  // Game reset
   reset() {
     for (const key in this.pieceFound) {
       if (this.pieceFound.hasOwnProperty(key)) {
@@ -462,7 +455,7 @@ export class Louvre_Base extends Scene {
       1,
       100
     );
-    const t = (this.t = program_state.animation_time / 1000);
+    this.t = program_state.animation_time / 1000;
     this.lightToCamera(program_state);
   }
 }
@@ -471,7 +464,6 @@ export class Louvre extends Louvre_Base {
   // Create art pieces inside the louvre
   createPieces(context, program_state, model_transform) {
     let t = program_state.animation_time / 1000;
-    let dt = program_state.animation_delta_time / 1000;
 
     let painting1_model_transform = model_transform
       .times(Mat4.translation(20, 20, 7))
@@ -686,9 +678,18 @@ export class Louvre extends Louvre_Base {
       this.materials.cylinder_material
     );
 
-    let theta = Math.PI / 2 * t;
-    let coin_model_transform = model_transform.times(Mat4.translation(-15, 21, 0.5)).times(Mat4.scale(0.2,0.2,0.2)).times(Mat4.rotation(Math.PI/2, 0,1,0)).times(Mat4.rotation(theta,1,0,0));
-    this.shapes.coin.draw(context, program_state, coin_model_transform, this.materials.coin_material);
+    let theta = (Math.PI / 2) * t;
+    let coin_model_transform = model_transform
+      .times(Mat4.translation(-15, 21, 0.5))
+      .times(Mat4.scale(0.2, 0.2, 0.2))
+      .times(Mat4.rotation(Math.PI / 2, 0, 1, 0))
+      .times(Mat4.rotation(theta, 1, 0, 0));
+    this.shapes.coin.draw(
+      context,
+      program_state,
+      coin_model_transform,
+      this.materials.coin_material
+    );
 
     let cone_model_transform = model_transform
       .times(Mat4.translation(18, 14, 2))
@@ -775,6 +776,7 @@ export class Louvre extends Louvre_Base {
     draw_shadow = false
   ) {
     program_state.draw_shadow = draw_shadow;
+
     let floor_transform = model_transform.times(Mat4.scale(40, 40, 20));
     this.shapes.wall.draw(
       context,
@@ -801,7 +803,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall1_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall2_transform = floor_transform
@@ -812,7 +814,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall2_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall3_transform = floor_transform
@@ -823,7 +825,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall3_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
 
     let wall4_transform = floor_transform
@@ -834,7 +836,7 @@ export class Louvre extends Louvre_Base {
       context,
       program_state,
       wall4_transform,
-      this.materials.texture_wall
+      shadow_pass ? this.materials.texture_wall : this.pure
     );
   }
 
@@ -994,7 +996,7 @@ export class Louvre extends Louvre_Base {
     }
   }
 
-  showTOD(context, program_state, model_transform) {
+  showTOD(context, program_state) {
     let string = ["" + this.currentGameTime.toFixed(2) + "s"];
     const strings = string[0].split("\n");
     let cube_side = Mat4.identity()
@@ -1055,8 +1057,10 @@ export class Louvre extends Louvre_Base {
   // Initialize game and display
   display(context, program_state) {
     super.display(context, program_state);
+
     let model_transform = Mat4.identity();
     const gl = context.context;
+
     if (this.startGame) {
       if (!this.pauseGame) {
         if (!this.endGame) {
@@ -1099,6 +1103,7 @@ export class Louvre extends Louvre_Base {
           program_state.light_tex_mat = light_proj_mat;
           program_state.view_mat = light_view_mat;
           program_state.projection_transform = light_proj_mat;
+
           this.createRoom(
             context,
             program_state,
@@ -1118,7 +1123,7 @@ export class Louvre extends Louvre_Base {
           );
 
           this.getGameState();
-          this.showTOD(context, program_state, model_transform);
+          this.showTOD(context, program_state);
           this.updateTimer(program_state);
           this.createRoom(context, program_state, model_transform, true, true);
           this.createPieces(context, program_state, model_transform);

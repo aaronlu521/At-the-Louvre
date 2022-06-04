@@ -1,12 +1,6 @@
 import { defs, tiny } from "./examples/common.js";
-import { Axes_Viewer, Axes_Viewer_Test_Scene } from "./examples/axes-viewer.js";
 import { Collision_Demo, Inertia_Demo } from "./examples/collisions-demo.js";
-import { Many_Lights_Demo } from "./examples/many-lights-demo.js";
 import { Obj_File_Demo } from "./examples/obj-file-demo.js";
-import { Scene_To_Texture_Demo } from "./examples/scene-to-texture-demo.js";
-import { Surfaces_Demo } from "./examples/surfaces-demo.js";
-import { Text_Demo } from "./examples/text-demo.js";
-import { Transforms_Sandbox } from "./examples/transforms-sandbox.js";
 
 // Import the Louvre museum
 import { Louvre } from "./louvre.js";
@@ -40,7 +34,13 @@ const {
 //                      (On the web, a server should instead just pack all these as well
 //                      as common.js into one file for you, such as "dependencies.js")
 
-Object.assign(defs, { Louvre }, { Obj_File_Demo} , {Collision_Demo}, {Inertia_Demo});
+Object.assign(
+  defs,
+  { Louvre },
+  { Obj_File_Demo },
+  { Collision_Demo },
+  { Inertia_Demo }
+);
 
 // ******************** End extra step
 
