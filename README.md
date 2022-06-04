@@ -35,6 +35,8 @@ Ctrl + p    Pause/Un-pause
 Ctrl + r    Restart
 Ctrl + o    Return To Initial Position (Bugged)
 
+<img src='assets/objects.png' width=600 height=300>
+
 ## Advanced Features
 ```
 ### Collision detection with a little physics
