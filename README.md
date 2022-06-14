@@ -1,5 +1,4 @@
 # At-the-Louvre
-A Project for CS 174A
 
 <img src='assets/gamescreen.png' width=600 height=300>
 
